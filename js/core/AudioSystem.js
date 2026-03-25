@@ -1,0 +1,171 @@
+class AudioSystem {
+    static init() {
+        if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    static playBattleMusic() {
+        this.init();
+        if(this.ctx.state === 'suspended') this.ctx.resume();
+        this.stopBattleMusic();
+        this.isPlaying = true;
+
+        const patterns = [
+            { bass: [196.00, 233.08, 261.63, 311.13], melody: [783.99, 932.33, 1046.50, 1244.51, 1567.98, 1244.51, 1046.50, 932.33] },
+            { bass: [220.00, 207.65, 196.00, 185.00], melody: [880.00, 1046.50, 880.00, 783.99, 659.25, 783.99, 880.00, 1046.50] },
+            { bass: [261.63, 261.63, 311.13, 349.23], melody: [1046.50, 1567.98, 1396.91, 1567.98, 1046.50, 1244.51, 1396.91, 1567.98] },
+            { bass: [146.83, 164.81, 174.61, 196.00], melody: [587.33, 659.25, 698.46, 783.99, 880.00, 783.99, 698.46, 659.25] },
+            { bass: [329.63, 293.66, 261.63, 246.94], melody: [1318.51, 1046.50, 1318.51, 1567.98, 1318.51, 1174.66, 1046.50, 987.77] }
+        ];
+        
+        // 5パターンからランダムに選ぶ
+        let p = patterns[Math.floor(Math.random() * patterns.length)];
+        let bass = p.bass; 
+        let melody = p.melody;
+        
+        let tick = 0;
+        let nextNoteTime = this.ctx.currentTime + 0.1;
+        let tempo = 0.12; // 120ms per tick => VERY fast, intense
+
+        this.scheduleNotes = () => {
+            if(!this.isPlaying) return;
+            while(nextNoteTime < this.ctx.currentTime + 0.1) {
+                // Play bass rhythm (plays every tick)
+                let bassOsc = this.ctx.createOscillator();
+                let bassGain = this.ctx.createGain();
+                bassOsc.type = 'triangle';
+                
+                // cycle bass notes depending on the measure
+                let measure = Math.floor(tick / 16);
+                let currentBassNode = bass[measure % bass.length];
+                bassOsc.frequency.value = currentBassNode / 2; // Deep bass
+                
+                bassOsc.connect(bassGain);
+                bassGain.connect(this.ctx.destination);
+                
+                bassGain.gain.setValueAtTime(0.08, nextNoteTime);
+                bassGain.gain.exponentialRampToValueAtTime(0.001, nextNoteTime + tempo - 0.02);
+                
+                bassOsc.start(nextNoteTime);
+                bassOsc.stop(nextNoteTime + tempo);
+                
+                // Play melody (arpeggio loop)
+                let melOsc = this.ctx.createOscillator();
+                let melGain = this.ctx.createGain();
+                melOsc.type = 'square';
+                
+                let currentMelody = melody[tick % melody.length];
+                // Transpose melody together with bass
+                let transposeRatio = currentBassNode / bass[0];
+                melOsc.frequency.value = currentMelody * transposeRatio;
+                
+                melOsc.connect(melGain);
+                melGain.connect(this.ctx.destination);
+                
+                melGain.gain.setValueAtTime(0.03, nextNoteTime);
+                melGain.gain.exponentialRampToValueAtTime(0.001, nextNoteTime + tempo - 0.02);
+                
+                melOsc.start(nextNoteTime);
+                melOsc.stop(nextNoteTime + tempo);
+
+                tick++;
+                nextNoteTime += tempo;
+            }
+            this.timerID = requestAnimationFrame(this.scheduleNotes);
+        };
+        this.scheduleNotes();
+    }
+
+    static stopBattleMusic() {
+        this.isPlaying = false;
+        if(this.timerID) cancelAnimationFrame(this.timerID);
+    }
+
+    static playVictoryMusic() {
+        this.init();
+        if(this.ctx.state === 'suspended') this.ctx.resume();
+        this.stopBattleMusic();
+
+        let time = this.ctx.currentTime;
+        let notes = [523.25, 659.25, 783.99, 1046.50]; // 楽しいファンファーレ
+        notes.forEach((freq, i) => {
+            let osc = this.ctx.createOscillator();
+            let gain = this.ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            let t = time + i * 0.15;
+            gain.gain.setValueAtTime(0.05, t);
+            let len = (i === notes.length - 1) ? 0.6 : 0.1;
+            gain.gain.exponentialRampToValueAtTime(0.001, t + len);
+            osc.start(t);
+            osc.stop(t + len + 0.1);
+        });
+    }
+
+    static playDefeatMusic() {
+        this.init();
+        if(this.ctx.state === 'suspended') this.ctx.resume();
+        this.stopBattleMusic();
+
+        let time = this.ctx.currentTime;
+        let notes = [311.13, 293.66, 277.18, 261.63]; // 残念なファンファーレ
+        notes.forEach((freq, i) => {
+            let osc = this.ctx.createOscillator();
+            let gain = this.ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            let t = time + i * 0.3;
+            gain.gain.setValueAtTime(0.08, t);
+            let len = (i === notes.length - 1) ? 1.0 : 0.2;
+            gain.gain.exponentialRampToValueAtTime(0.001, t + len);
+            osc.start(t);
+            osc.stop(t + len + 0.1);
+        });
+    }
+
+    static speakSkill(skillName) {
+        if (!window.speechSynthesis) return;
+        
+        // 読み上げ中の音声をキャンセルして次を優先
+        window.speechSynthesis.cancel();
+        
+        // 可愛い電子音で「ピピッ！」という前触れを作る
+        if (this.ctx && this.ctx.state !== 'suspended') {
+            let t = this.ctx.currentTime;
+            let osc = this.ctx.createOscillator();
+            let gain = this.ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(1500, t);
+            osc.frequency.exponentialRampToValueAtTime(800, t + 0.1);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.02, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+            osc.start(t);
+            osc.stop(t + 0.1);
+        }
+
+        // 語尾を可愛くする
+        let u = new SpeechSynthesisUtterance(skillName);
+        u.lang = 'ja-JP';
+        
+        // ピカチュウ風の声を演出（最大ピッチ、かなり早口）
+        u.pitch = 2.0; // 最大ピッチ
+        u.rate = 1.7;  // 早口
+        
+        // 環境によってはデフォルトの男性声が高くなるだけなので、可能なら女性声を探す
+        let voices = window.speechSynthesis.getVoices();
+        let jpVoices = voices.filter(v => v.lang.includes('ja'));
+        let cuteVoice = jpVoices.find(v => v.name.includes('Haruka') || v.name.includes('Ayumi') || v.name.includes('Nanami') || v.name.includes('Kyoko') || v.name.includes('Female'));
+        if (cuteVoice) {
+            u.voice = cuteVoice;
+        }
+        
+        window.speechSynthesis.speak(u);
+    }
+}
