@@ -97,7 +97,7 @@ const GameData = {
         let def = Math.floor(data.stats.find(s => s.stat.name === 'defense').base_stat * 1.5);
         let spd = Math.floor(data.stats.find(s => s.stat.name === 'speed').base_stat * 1.5);
         let spriteUrl = data.sprites.front_default || data.sprites.back_default;
-        let animatedUrl = data.sprites.versions?.["generation-v"]?.["black-white"]?.animated?.front_default;
+        let animatedUrl = data.sprites.other?.showdown?.front_default || data.sprites.versions?.["generation-v"]?.["black-white"]?.animated?.front_default;
         
         let img = new Image();
         img.crossOrigin = "anonymous";
@@ -133,7 +133,7 @@ const GameData = {
         let def = data.stats.find(s => s.stat.name === 'defense').base_stat;
         let spd = data.stats.find(s => s.stat.name === 'speed').base_stat;
         let spriteUrl = data.sprites.front_default || data.sprites.back_default;
-        let animatedUrl = data.sprites.versions?.["generation-v"]?.["black-white"]?.animated?.front_default;
+        let animatedUrl = data.sprites.other?.showdown?.front_default || data.sprites.versions?.["generation-v"]?.["black-white"]?.animated?.front_default;
         
         let img = new Image();
         img.crossOrigin = "anonymous";

@@ -1,7 +1,7 @@
 class UIManager {
     constructor(battleEngine) {
         this.battleEngine = battleEngine;
-        this.points = 1000;
+        this.points = 200;
         this.upgradeLevel = 0; // 0 to max, determines bonusMultiplier
 
         this.leftFighter = null;
@@ -75,8 +75,8 @@ class UIManager {
                 this.els.btnGlobalUpgrade.classList.remove('active-upgrade');
             } else {
                 // Turn on
-                if (this.points < 1500) {
-                    alert('ポイントが足りません（1500ポイント必要です）。');
+                if (this.points < 500) {
+                    alert('ポイントが足りません（500ポイント必要です）。');
                     return;
                 }
                 this.upgradeNextBet = true;
@@ -102,9 +102,9 @@ class UIManager {
                     return;
                 }
 
-                let cost = 1500;
+                let cost = 500;
                 if(this.points < cost) {
-                    alert('ポイントが足りません（1500ポイント必要です）。');
+                    alert('ポイントが足りません（500ポイント必要です）。');
                     return;
                 }
 
@@ -129,17 +129,36 @@ class UIManager {
                 // Play evolving animation
                 spriteImg.classList.add('evolving');
 
-                // Fetch evolution
-                let newId = await GameData.getEvolutionId(fighter.id);
-                let evolvedFighter = null;
-                if(newId !== fighter.id) {
-                    evolvedFighter = await GameData.generateSpecificFighterAPI(newId);
-                } else {
-                    evolvedFighter = await GameData.generateSpecificFighterAPI(fighter.id, true);
-                }
+                // Enforce minimum animation time and fetch concurrently
+                let minWait = new Promise(r => setTimeout(r, 2500));
+                
+                let fetchLogic = (async () => {
+                    let newId = await GameData.getEvolutionId(fighter.id);
+                    let resultFighter = null;
+                    if(newId !== fighter.id) {
+                        resultFighter = await GameData.generateSpecificFighterAPI(newId);
+                    } else {
+                        resultFighter = await GameData.generateSpecificFighterAPI(fighter.id, true);
+                    }
+                    
+                    // Override stats to be exactly 1.2x the pre-evolution stats
+                    resultFighter.maxHp = Math.floor(fighter.maxHp * 1.5);
+                    resultFighter.hp = resultFighter.maxHp;
+                    resultFighter.atk = Math.floor(fighter.atk * 1.3);
+                    resultFighter.def = Math.floor(fighter.def * 1.3);
+                    resultFighter.spd = Math.floor(fighter.spd * 1.3);
+                    
+                    // Preload GIF so it doesn't pop before loading
+                    await new Promise(resolve => {
+                        let tempImg = new Image();
+                        tempImg.onload = resolve;
+                        tempImg.onerror = resolve;
+                        tempImg.src = resultFighter.uiSpriteUrl;
+                    });
+                    return resultFighter;
+                })();
 
-                // Wait for animation
-                await new Promise(r => setTimeout(r, 2000));
+                let evolvedFighter = await Promise.all([fetchLogic, minWait]).then(res => res[0]);
 
                 spriteImg.classList.remove('evolving');
 

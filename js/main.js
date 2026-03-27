@@ -13,10 +13,15 @@ window.addEventListener('load', async () => {
     function resizeGame() {
         const gameContainer = document.getElementById('game-container');
         const canvas = document.getElementById('gameCanvas');
+        const canvasFG = document.getElementById('gameCanvasFG');
         if (!gameContainer || !canvas) return;
         
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        if (canvasFG) {
+            canvasFG.width = window.innerWidth;
+            canvasFG.height = window.innerHeight;
+        }
         
         // Update BattleEngine limits live
         battleEngine.canvasWidth = canvas.width;

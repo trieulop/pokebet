@@ -357,12 +357,12 @@ canvas {
 }
 
 .evolving {
-    animation: evolveGlow 2s forwards, evolveShake 0.5s infinite;
+    animation: evolveGlow 2s forwards, evolveShake 0.5s infinite !important;
     pointer-events: none;
 }
 
 .evolved-pop {
-    animation: evolvedPop 1s ease-out;
+    animation: evolvedPop 1s ease-out !important;
     pointer-events: none;
 }
 

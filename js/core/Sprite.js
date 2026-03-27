@@ -5,6 +5,7 @@ class Sprite {
         this.imageKey = imageKey; // string key for AssetGenerator
         this.frameWidth = frameWidth;
         this.frameHeight = frameHeight;
+        this.domElement = null;
         
         // Define animations: { row: yIndex, frames: count, speed: ticksPerFrame }
         this.animations = {
@@ -27,6 +28,14 @@ class Sprite {
         // Visual effects
         this.flipX = false;
         this.flashWhite = false;
+    }
+
+    bindDOM(element, srcUrl) {
+        this.domElement = element;
+        if (element) {
+            this.domElement.src = srcUrl;
+            this.domElement.style.display = 'block';
+        }
     }
 
     play(animName) {
@@ -94,13 +103,47 @@ class Sprite {
             let fw = Math.max(img.width, 96);
             let fh = Math.max(img.height, 96);
             let dx = 0; let dy = 0; let rot = 0;
-            if (this.currentAnim === 'idle') dy = Math.sin(this.tickCount * 0.1) * 3;
+            let timeMs = performance.now();
+            let period = 2000;
+            let progress = (timeMs % period) / period;
+            let curve = (1 - Math.cos(progress * 2 * Math.PI)) / 2;
+            if (this.currentAnim === 'idle') dy = -25 * curve;
             else if (this.currentAnim === 'attack') dx = (this.tickCount < 10) ? 15 : 0;
             else if (this.currentAnim === 'hit') { dx = -10; ctx.globalCompositeOperation = 'lighter'; }
             else if (this.currentAnim === 'faint') { rot = Math.PI / 2; ctx.globalAlpha = 0.5; }
             
             ctx.rotate(rot);
-            let drawScale = this.scale * 1.5; 
+            let drawScale = this.scale * 1.5;
+
+            if (this.domElement) {
+                let fWidth = Math.max(img.width, 96) * drawScale;
+                let fHeight = Math.max(img.height, 96) * drawScale;
+                
+                this.domElement.style.width = fWidth + 'px';
+                this.domElement.style.height = fHeight + 'px';
+                
+                // Position centered
+                let px = this.x - fWidth/2 + dx;
+                let py = this.y - fHeight/2 + dy;
+                
+                let scaleStr = this.flipX ? 'scaleX(-1)' : 'scaleX(1)';
+                let rotateStr = rot ? `rotate(${rot}rad)` : '';
+                
+                this.domElement.style.transform = `translate(${px}px, ${py}px) ${scaleStr} ${rotateStr}`;
+                this.domElement.style.transformOrigin = 'center center';
+                
+                if (this.flashWhite) {
+                    this.domElement.style.filter = 'brightness(2) contrast(0) opacity(1)';
+                } else if (this.currentAnim === 'faint') {
+                    this.domElement.style.filter = 'drop-shadow(0 0 5px rgba(0,0,0,0.5)) opacity(0.5)';
+                } else {
+                    this.domElement.style.filter = 'drop-shadow(0 0 5px rgba(0,0,0,0.5)) opacity(' + this.alpha + ')';
+                }
+                
+                ctx.restore();
+                return; // SKIP CANVAS DRAW
+            }
+
             ctx.drawImage(img, -fw*drawScale/2 + dx, -fh*drawScale/2 + dy, fw*drawScale, fh*drawScale);
         } else {
             let anim = this.animations[this.currentAnim];

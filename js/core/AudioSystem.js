@@ -153,7 +153,7 @@ class AudioSystem {
         }
 
         // 語尾を可愛くする
-        let u = new SpeechSynthesisUtterance(skillName);
+        let u = new SpeechSynthesisUtterance(skillName + "！");
 
         // Web Speech APIのバグ対策：変数がガベージコレクションされると途切れるため、グローバル配列に保持する
         window.utterances = window.utterances || [];
@@ -165,18 +165,30 @@ class AudioSystem {
 
         u.lang = 'ja-JP';
         
-        // ピカチュウ風の声を演出（1.7だとスマホで途切れる・早すぎることがあるため1.2に）
-        u.pitch = 2.0; // 最大ピッチ
-        u.rate = 1.2;  // 聞き取りやすい早口
+        let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+            // スマホは極端なピッチ・速度だと音声生成エンジンが落ちて途切れるため、安全で可愛い設定に
+            u.pitch = 1.5; 
+            u.rate = 1.0;  
+        } else {
+            // PC版のピカチュウ風の声
+            u.pitch = 2.0; 
+            u.rate = 1.2;  
+        }
         
         // 環境によってはデフォルトの男性声が高くなるだけなので、可能なら女性声を探す
         let voices = window.speechSynthesis.getVoices();
-        let jpVoices = voices.filter(v => v.lang.includes('ja'));
-        let cuteVoice = jpVoices.find(v => v.name.includes('Haruka') || v.name.includes('Ayumi') || v.name.includes('Nanami') || v.name.includes('Kyoko') || v.name.includes('Female'));
+        let jpVoices = voices.filter(v => v.lang && v.lang.includes('ja'));
+        let cuteVoice = jpVoices.find(v => v.name.includes('Haruka') || v.name.includes('Kyoko') || v.name.includes('Hatsune') || v.name.includes('Female'));
+        if (!cuteVoice && jpVoices.length > 0) cuteVoice = jpVoices[0]; // なければ最初の日本語
         if (cuteVoice) {
             u.voice = cuteVoice;
         }
         
-        window.speechSynthesis.speak(u);
+        // スマホ(特にiOS Safari)のバグ対策：cancel()の直後にspeak()を呼ぶと新しい音声もキャンセル(途切れる)されるため、少し待つ
+        setTimeout(() => {
+            window.speechSynthesis.speak(u);
+        }, 50);
     }
 }

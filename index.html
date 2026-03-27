@@ -9,17 +9,26 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- Main Game Canvas -->
+        <!-- Main Game Canvas (Background) -->
         <canvas id="gameCanvas"></canvas>
         
+        <!-- DOM Sprite Layer for animated GIFs in battle -->
+        <div id="battle-sprite-layer" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:hidden; display:none; z-index: 5;">
+            <img id="dom-sprite-left" style="position: absolute; display: none; will-change: transform; image-rendering: pixelated;" />
+            <img id="dom-sprite-right" style="position: absolute; display: none; will-change: transform; image-rendering: pixelated;" />
+        </div>
+        
+        <!-- Foreground Game Canvas for Over-Sprite Effects -->
+        <canvas id="gameCanvasFG" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index: 6; image-rendering: pixelated;"></canvas>
+        
         <!-- UI Layer overlaying Canvas -->
-        <div id="ui-layer">
+        <div id="ui-layer" style="position:relative; z-index: 10;">
             <!-- Top bar: Points & Menu -->
             <div id="top-bar">
-                <div class="points-display">ポイント: <span id="player-points">1000</span></div>
+                <div class="points-display">ポイント: <span id="player-points">200</span></div>
                 <button id="btn-global-upgrade" class="btn btn-global-upgrade">
                     <span class="text-large">進化</span><br>
-                    <span class="text-small">1500pts</span>
+                    <span class="text-small">500pts</span>
                 </button>
             </div>
 

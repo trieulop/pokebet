@@ -4,6 +4,12 @@ class BattleEngine {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         
+        let fg = document.getElementById(canvasId + 'FG');
+        if (fg) {
+            this.canvasFG = fg;
+            this.ctxFG = this.canvasFG.getContext('2d');
+        }
+        
         // Settings
         this.canvasWidth = this.canvas.width;
         this.canvasHeight = this.canvas.height;
@@ -38,7 +44,7 @@ class BattleEngine {
         this.rightFighter = rightFighter;
         
         let isPortrait = this.canvasHeight > this.canvasWidth;
-        this.timeScale = isPortrait ? (1 / 1.2) : 1.0; // スマホのみ1.2倍速に設定 (かかる時間は1÷1.2)
+        this.timeScale = isPortrait ? 1.2 : 1.0; // スマホのみ1.2倍遅く(時間は1.2倍かかる)
         if (isPortrait) {
             this.posLeft = { x: this.canvasWidth * 0.25, y: this.canvasHeight * 0.65 };
             this.posRight = { x: this.canvasWidth * 0.75, y: this.canvasHeight * 0.65 };
@@ -47,17 +53,23 @@ class BattleEngine {
             this.posRight = { x: this.canvasWidth * 0.75, y: this.canvasHeight * 0.6 };
         }
 
+        document.getElementById('battle-sprite-layer').style.display = 'block';
+
+        document.getElementById('battle-sprite-layer').style.display = 'block';
+
         this.leftSprite = new Sprite(leftFighter.spriteKey);
+        this.leftSprite.bindDOM(document.getElementById('dom-sprite-left'), leftFighter.uiSpriteUrl);
         this.leftSprite.x = this.posLeft.x;
         this.leftSprite.y = this.posLeft.y;
-        this.leftSprite.flipX = false;
-        this.leftSprite.scale = isPortrait ? 1.6 : 2.5;
+        this.leftSprite.flipX = true; // Flip so it faces right (towards opponent)
+        this.leftSprite.scale = isPortrait ? ((1.6 / 1.44) / 1.2) : (2.5 / 1.44); // スマホのみさらに1.2倍小さく
 
         this.rightSprite = new Sprite(rightFighter.spriteKey);
+        this.rightSprite.bindDOM(document.getElementById('dom-sprite-right'), rightFighter.uiSpriteUrl);
         this.rightSprite.x = this.posRight.x;
         this.rightSprite.y = this.posRight.y;
-        this.rightSprite.flipX = true; // Face left inherently
-        this.rightSprite.scale = isPortrait ? 1.6 : 2.5;
+        this.rightSprite.flipX = false; // Normal faces left (towards opponent)
+        this.rightSprite.scale = isPortrait ? ((1.6 / 1.44) / 1.2) : (2.5 / 1.44); // スマホのみさらに1.2倍小さく
 
         this.onMessage = callbacks.onMessage;
         this.onHpChange = callbacks.onHpChange;
@@ -81,6 +93,8 @@ class BattleEngine {
 
     stop() {
         this.isRunning = false;
+        let layer = document.getElementById('battle-sprite-layer');
+        if (layer) layer.style.display = 'none';
     }
 
     // Helper to pause execution
@@ -196,13 +210,13 @@ class BattleEngine {
             let baseHeal = Math.max(5, Math.floor(40 * healMult));
             let amount = attacker.heal(baseHeal);
             this.onHpChange(attackerSide, attacker.hp, attacker.maxHp);
-            this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 50, `+${amount}`, '#06d6a0', 30);
+            this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 100, `+${amount}`, '#06d6a0', 30);
             this.particleSystem.addHitEffect(attackerSprite.x, attackerSprite.y, '#06d6a0', 20);
             this.onMessage(`${attacker.name} はHPを回復した！`);
         } 
         else if (skill.type === 'buff') {
-            attacker.def += 10;
-            this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 50, `防御アップ`, '#457b9d', 24);
+            attacker.def += 40;
+            this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 100, `防御アップ`, '#457b9d', 24);
             this.particleSystem.addHitEffect(attackerSprite.x, attackerSprite.y, '#457b9d', 20);
         }
         else {
@@ -218,7 +232,7 @@ class BattleEngine {
             defenderSprite.play('hit');
             defenderSprite.flashWhite = true;
             this.particleSystem.addHitEffect(defenderSprite.x, defenderSprite.y, skill.effectAnim, 30);
-            this.particleSystem.addFloatingText(defenderSprite.x, defenderSprite.y - 50, `-${actualDmg}`, '#e63946', 32);
+            this.particleSystem.addFloatingText(defenderSprite.x, defenderSprite.y - 100, `-${actualDmg}`, '#e63946', 32);
 
             await this.wait(200);
             defenderSprite.flashWhite = false;
@@ -243,12 +257,20 @@ class BattleEngine {
 
     endBattle() {
         this.isRunning = false;
+        let layer = document.getElementById('battle-sprite-layer');
+        if (layer) layer.style.display = 'none';
         if (typeof AudioSystem !== 'undefined') AudioSystem.stopBattleMusic();
         let winnerSide = this.leftFighter.isAlive() ? 'left' : 'right';
         this.onEnd(winnerSide);
     }
 
     render() {
+        this.ctx.imageSmoothingEnabled = false; // Add sharp crisp rendering mode every frame
+        if (this.ctxFG) {
+            this.ctxFG.imageSmoothingEnabled = false;
+            this.ctxFG.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        }
+        
         // Clear background with black (should rely on bg sprite really)
         this.ctx.fillStyle = '#000';
         this.ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
@@ -266,6 +288,14 @@ class BattleEngine {
         this.ctx.translate(this.canvasWidth/2, this.canvasHeight/2);
         this.ctx.scale(this.cameraObj.zoom, this.cameraObj.zoom);
         this.ctx.translate(-this.canvasWidth/2 + this.cameraObj.x + cx, -this.canvasHeight/2 + cy);
+
+        // Apply same to DOM layer to sync with Camera
+        let layerDom = document.getElementById('battle-sprite-layer');
+        if (layerDom) {
+            let layerTransform = `translate(${this.canvasWidth/2}px, ${this.canvasHeight/2}px) scale(${this.cameraObj.zoom}) translate(${-this.canvasWidth/2 + this.cameraObj.x + cx}px, ${-this.canvasHeight/2 + cy}px)`;
+            layerDom.style.transform = layerTransform;
+            layerDom.style.transformOrigin = '0 0';
+        }
 
         // Draw Arena Background
         let bgImg = AssetGenerator.get('bg_arena');
@@ -286,8 +316,7 @@ class BattleEngine {
         // Draw Shadows/Back particles
         // ...
 
-        // Draw Sprites
-        // Y sort to draw bottom first (depth)
+        // Draw Sprites (Fallback if not using DOM layer)
         let sprites = [];
         if(this.leftSprite) sprites.push(this.leftSprite);
         if(this.rightSprite) sprites.push(this.rightSprite);
@@ -298,9 +327,21 @@ class BattleEngine {
             s.draw(this.ctx);
         });
 
-        // Draw Foreground Particles
+        // Draw Foreground Particles to the isolated canvas over everything!
+        let targetCtx = this.ctxFG || this.ctx;
+        if (this.ctxFG) {
+            targetCtx.save();
+            targetCtx.translate(this.canvasWidth/2, this.canvasHeight/2);
+            targetCtx.scale(this.cameraObj.zoom, this.cameraObj.zoom);
+            targetCtx.translate(-this.canvasWidth/2 + this.cameraObj.x + cx, -this.canvasHeight/2 + cy);
+        }
+
         this.particleSystem.update();
-        this.particleSystem.draw(this.ctx);
+        this.particleSystem.draw(targetCtx);
+
+        if (this.ctxFG) {
+            targetCtx.restore();
+        }
 
         this.ctx.restore();
     }
