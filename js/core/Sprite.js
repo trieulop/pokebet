@@ -100,8 +100,8 @@ class Sprite {
         }
 
         if(this.imageKey.startsWith('api_')) {
-            let fw = Math.max(img.width, 96);
-            let fh = Math.max(img.height, 96);
+            let fw = img.width || 96; // 取得できない場合のみ96
+            let fh = img.height || 96;
             let dx = 0; let dy = 0; let rot = 0;
             let timeMs = performance.now();
             let period = 2000;
@@ -113,11 +113,11 @@ class Sprite {
             else if (this.currentAnim === 'faint') { rot = Math.PI / 2; ctx.globalAlpha = 0.5; }
             
             ctx.rotate(rot);
-            let drawScale = this.scale * 1.5;
+            let drawScale = this.scale * 1.2; // 試合中一律1.2倍拡大
 
             if (this.domElement) {
-                let fWidth = Math.max(img.width, 96) * drawScale;
-                let fHeight = Math.max(img.height, 96) * drawScale;
+                let fWidth = fw * drawScale;
+                let fHeight = fh * drawScale;
                 
                 this.domElement.style.width = fWidth + 'px';
                 this.domElement.style.height = fHeight + 'px';

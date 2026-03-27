@@ -1,7 +1,7 @@
 class UIManager {
     constructor(battleEngine) {
         this.battleEngine = battleEngine;
-        this.points = 200;
+        this.points = 1000;
         this.upgradeLevel = 0; // 0 to max, determines bonusMultiplier
 
         this.leftFighter = null;

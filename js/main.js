@@ -18,9 +18,11 @@ window.addEventListener('load', async () => {
         
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        canvas.getContext('2d').imageSmoothingEnabled = false;
         if (canvasFG) {
             canvasFG.width = window.innerWidth;
             canvasFG.height = window.innerHeight;
+            canvasFG.getContext('2d').imageSmoothingEnabled = false;
         }
         
         // Update BattleEngine limits live

@@ -86,13 +86,15 @@ class ParticleSystem {
     }
 
     update() {
-        for(let i = this.particles.length - 1; i >= 0; i--) {
+        let active = [];
+        for(let i = 0; i < this.particles.length; i++) {
             let p = this.particles[i];
             p.update();
-            if(p.life <= 0) {
-                this.particles.splice(i, 1);
+            if(p.life > 0) {
+                active.push(p);
             }
         }
+        this.particles = active;
     }
 
     draw(ctx) {

@@ -215,7 +215,7 @@ class BattleEngine {
             this.onMessage(`${attacker.name} はHPを回復した！`);
         } 
         else if (skill.type === 'buff') {
-            attacker.def += 40;
+            attacker.def = Math.floor(attacker.def * 1.5) + 20; // 割合上昇に変更（元の防御力の1.5倍＋底上げ20）
             this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 100, `防御アップ`, '#457b9d', 24);
             this.particleSystem.addHitEffect(attackerSprite.x, attackerSprite.y, '#457b9d', 20);
         }
@@ -265,9 +265,7 @@ class BattleEngine {
     }
 
     render() {
-        this.ctx.imageSmoothingEnabled = false; // Add sharp crisp rendering mode every frame
         if (this.ctxFG) {
-            this.ctxFG.imageSmoothingEnabled = false;
             this.ctxFG.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         }
         
@@ -317,15 +315,15 @@ class BattleEngine {
         // ...
 
         // Draw Sprites (Fallback if not using DOM layer)
-        let sprites = [];
-        if(this.leftSprite) sprites.push(this.leftSprite);
-        if(this.rightSprite) sprites.push(this.rightSprite);
-        sprites.sort((a,b) => a.y - b.y);
-
-        sprites.forEach(s => {
-            s.update();
-            s.draw(this.ctx);
-        });
+        // Right sprite is higher (y is smaller) or equal, so draw it first for proper depth
+        if(this.rightSprite) {
+            this.rightSprite.update();
+            this.rightSprite.draw(this.ctx);
+        }
+        if(this.leftSprite) {
+            this.leftSprite.update();
+            this.leftSprite.draw(this.ctx);
+        }
 
         // Draw Foreground Particles to the isolated canvas over everything!
         let targetCtx = this.ctxFG || this.ctx;

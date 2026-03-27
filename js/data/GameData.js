@@ -1,4 +1,6 @@
 const GameData = {
+    apiCache: {},
+    evolutionCache: {},
     rarity: {
         'common': { name: 'コモン', multiplier: 1.0, color: null, prob: 0.5 },
         'rare': { name: 'レア', multiplier: 1.2, color: '#4cc9f0', prob: 0.3 },
@@ -77,78 +79,78 @@ const GameData = {
             if (nextName) {
                 let nextRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${nextName}`);
                 let nextData = await nextRes.json();
+                this.evolutionCache[currentId] = nextData.id;
                 return nextData.id;
             }
-        } catch(e) { console.error(e); }
+        } catch(e) { console.warn("Evolution API error", e); }
+        this.evolutionCache[currentId] = currentId;
         return currentId;
     },
 
-    async generateSpecificFighterAPI(id, forceLegendary = false) {
-        let res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-        let data = await res.json();
+    async fetchFighterData(idOrName) {
+        if (this.apiCache[idOrName]) return this.apiCache[idOrName];
         
-        let speciesRes = await fetch(data.species.url);
-        let speciesData = await speciesRes.json();
-        let jpNameEntry = speciesData.names.find(n => n.language.name === 'ja' || n.language.name === 'ja-Hrkt');
+        try {
+            let res = await fetch(`https://pokeapi.co/api/v2/pokemon/${idOrName}`);
+            if(!res.ok) throw new Error("API call failed");
+            let data = await res.json();
+            
+            let speciesRes = await fetch(data.species.url);
+            let speciesData = await speciesRes.json();
+            let jpNameEntry = speciesData.names.find(n => n.language.name === 'ja' || n.language.name === 'ja-Hrkt');
+            
+            let name = jpNameEntry ? jpNameEntry.name : data.name.toUpperCase();
+            let hp = data.stats.find(s => s.stat.name === 'hp').base_stat;
+            let atk = data.stats.find(s => s.stat.name === 'attack').base_stat;
+            let def = data.stats.find(s => s.stat.name === 'defense').base_stat;
+            let spd = data.stats.find(s => s.stat.name === 'speed').base_stat;
+            let spriteUrl = data.sprites.front_default || data.sprites.back_default;
+            let animatedUrl = data.sprites.other?.showdown?.front_default || data.sprites.versions?.["generation-v"]?.["black-white"]?.animated?.front_default;
+            
+            let spriteKey = `api_${data.id}`;
+            if (!AssetGenerator.sprites[spriteKey]) {
+                let img = new Image();
+                img.crossOrigin = "anonymous";
+                img.src = spriteUrl;
+                await new Promise(r => { img.onload = r; img.onerror = r; });
+                AssetGenerator.sprites[spriteKey] = img;
+            }
+            
+            let fd = { id: data.id, name, hp, atk, def, spd, spriteKey, uiSpriteUrl: animatedUrl || spriteUrl };
+            this.apiCache[data.id] = fd; // Cache by ID
+            this.apiCache[idOrName] = fd; // Cache by requested term
+            return fd;
+        } catch(e) {
+            console.error("Fetch fighter fallback:", e);
+            let base = this.roster[Math.floor(Math.random() * this.roster.length)];
+            return {
+                id: base.id, name: base.name, hp: base.baseHp, atk: base.baseAtk, def: base.baseDef, spd: base.baseSpd,
+                spriteKey: base.spriteKey, uiSpriteUrl: ''
+            };
+        }
+    },
+
+    async buildFighterInstance(idOrName, forcedRarity = null, bonusMultiplier = 0) {
+        let fd = await this.fetchFighterData(idOrName);
+        let p = new Pokemon(fd.id, fd.name, fd.hp, fd.atk, fd.def, fd.spd, fd.spriteKey);
+        p.uiSpriteUrl = fd.uiSpriteUrl;
         
-        let name = jpNameEntry ? jpNameEntry.name : data.name.toUpperCase();
-        let hp = Math.floor(data.stats.find(s => s.stat.name === 'hp').base_stat * 1.5);
-        let atk = Math.floor(data.stats.find(s => s.stat.name === 'attack').base_stat * 1.5);
-        let def = Math.floor(data.stats.find(s => s.stat.name === 'defense').base_stat * 1.5);
-        let spd = Math.floor(data.stats.find(s => s.stat.name === 'speed').base_stat * 1.5);
-        let spriteUrl = data.sprites.front_default || data.sprites.back_default;
-        let animatedUrl = data.sprites.other?.showdown?.front_default || data.sprites.versions?.["generation-v"]?.["black-white"]?.animated?.front_default;
-        
-        let img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = spriteUrl;
-        await new Promise(r => img.onload = r);
-        AssetGenerator.sprites[`api_${id}_evolved`] = img;
-        
-        let p = new Pokemon(id, name, hp, atk, def, spd, `api_${id}_evolved`);
-        p.uiSpriteUrl = animatedUrl || spriteUrl;
-        
-        let rarity = forceLegendary ? 'legendary' : this.getRandomRarity();
-        let availableSkills = this.skills.filter(s => s.id !== 'tackle');
+        let rarity = forcedRarity ? forcedRarity : this.getRandomRarity();
+        let availableSkills = [...this.skills].filter(s => s.id !== 'tackle');
         availableSkills.sort(() => Math.random() - 0.5);
         let chosenIds = ['tackle', availableSkills[0].id, availableSkills[1].id];
         
         p.setSkills(chosenIds);
-        p.setup(rarity, 0.5); // flat evolution bonus
+        p.setup(rarity, bonusMultiplier);
         return p;
+    },
+
+    async generateSpecificFighterAPI(id, forceLegendary = false) {
+        return await this.buildFighterInstance(id, forceLegendary ? 'legendary' : null, 0.5);
     },
 
     async generateRandomFighterAPI(bonusMultiplier = 0) {
         let randId = Math.floor(Math.random() * 898) + 1; // Gen 1-8
-        let res = await fetch(`https://pokeapi.co/api/v2/pokemon/${randId}`);
-        let data = await res.json();
-        
-        let speciesRes = await fetch(data.species.url);
-        let speciesData = await speciesRes.json();
-        let jpNameEntry = speciesData.names.find(n => n.language.name === 'ja' || n.language.name === 'ja-Hrkt');
-
-        let name = jpNameEntry ? jpNameEntry.name : data.name.toUpperCase();
-        let hp = data.stats.find(s => s.stat.name === 'hp').base_stat;
-        let atk = data.stats.find(s => s.stat.name === 'attack').base_stat;
-        let def = data.stats.find(s => s.stat.name === 'defense').base_stat;
-        let spd = data.stats.find(s => s.stat.name === 'speed').base_stat;
-        let spriteUrl = data.sprites.front_default || data.sprites.back_default;
-        let animatedUrl = data.sprites.other?.showdown?.front_default || data.sprites.versions?.["generation-v"]?.["black-white"]?.animated?.front_default;
-        
-        let img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = spriteUrl;
-        await new Promise(r => img.onload = r);
-        AssetGenerator.sprites[`api_${randId}`] = img;
-        
-        let p = new Pokemon(randId, name, hp, atk, def, spd, `api_${randId}`);
-        p.uiSpriteUrl = animatedUrl || spriteUrl;
-        let rarity = this.getRandomRarity();
-        let availableSkills = this.skills.filter(s => s.id !== 'tackle');
-        availableSkills.sort(() => Math.random() - 0.5);
-        let chosenIds = ['tackle', availableSkills[0].id, availableSkills[1].id];
-        p.setSkills(chosenIds);
-        p.setup(rarity, bonusMultiplier);
-        return p;
+        return await this.buildFighterInstance(randId, null, bonusMultiplier);
     }
 };
