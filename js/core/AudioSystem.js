@@ -132,7 +132,9 @@ class AudioSystem {
         if (!window.speechSynthesis) return;
         
         // 読み上げ中の音声をキャンセルして次を優先
-        window.speechSynthesis.cancel();
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
         
         // 可愛い電子音で「ピピッ！」という前触れを作る
         if (this.ctx && this.ctx.state !== 'suspended') {
@@ -152,11 +154,20 @@ class AudioSystem {
 
         // 語尾を可愛くする
         let u = new SpeechSynthesisUtterance(skillName);
+
+        // Web Speech APIのバグ対策：変数がガベージコレクションされると途切れるため、グローバル配列に保持する
+        window.utterances = window.utterances || [];
+        window.utterances.push(u);
+        u.onend = function() {
+            let index = window.utterances.indexOf(u);
+            if (index !== -1) window.utterances.splice(index, 1);
+        };
+
         u.lang = 'ja-JP';
         
-        // ピカチュウ風の声を演出（最大ピッチ、かなり早口）
+        // ピカチュウ風の声を演出（1.7だとスマホで途切れる・早すぎることがあるため1.2に）
         u.pitch = 2.0; // 最大ピッチ
-        u.rate = 1.7;  // 早口
+        u.rate = 1.2;  // 聞き取りやすい早口
         
         // 環境によってはデフォルトの男性声が高くなるだけなので、可能なら女性声を探す
         let voices = window.speechSynthesis.getVoices();

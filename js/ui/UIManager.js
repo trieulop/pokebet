@@ -89,6 +89,13 @@ class UIManager {
                 let side = e.currentTarget.getAttribute('data-side');
                 this.betSide = side;
 
+                // Unlock Speech API on mobile (must be synchronously bound to click event)
+                if (window.speechSynthesis) {
+                    let unlockUtterance = new SpeechSynthesisUtterance('');
+                    unlockUtterance.volume = 0;
+                    window.speechSynthesis.speak(unlockUtterance);
+                }
+
                 if (!this.upgradeNextBet) {
                     if(!this.leftFighter || !this.rightFighter) return;
                     this.startMatch();

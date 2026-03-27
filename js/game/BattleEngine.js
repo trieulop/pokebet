@@ -37,17 +37,27 @@ class BattleEngine {
         this.leftFighter = leftFighter;
         this.rightFighter = rightFighter;
         
+        let isPortrait = this.canvasHeight > this.canvasWidth;
+        this.timeScale = isPortrait ? (1 / 1.2) : 1.0; // スマホのみ1.2倍速に設定 (かかる時間は1÷1.2)
+        if (isPortrait) {
+            this.posLeft = { x: this.canvasWidth * 0.25, y: this.canvasHeight * 0.65 };
+            this.posRight = { x: this.canvasWidth * 0.75, y: this.canvasHeight * 0.65 };
+        } else {
+            this.posLeft = { x: this.canvasWidth * 0.25, y: this.canvasHeight * 0.65 };
+            this.posRight = { x: this.canvasWidth * 0.75, y: this.canvasHeight * 0.6 };
+        }
+
         this.leftSprite = new Sprite(leftFighter.spriteKey);
         this.leftSprite.x = this.posLeft.x;
         this.leftSprite.y = this.posLeft.y;
         this.leftSprite.flipX = false;
-        this.leftSprite.scale = 2.5;
+        this.leftSprite.scale = isPortrait ? 1.6 : 2.5;
 
         this.rightSprite = new Sprite(rightFighter.spriteKey);
         this.rightSprite.x = this.posRight.x;
         this.rightSprite.y = this.posRight.y;
-        this.rightSprite.flipX = true; // Face left
-        this.rightSprite.scale = 2.5;
+        this.rightSprite.flipX = true; // Face left inherently
+        this.rightSprite.scale = isPortrait ? 1.6 : 2.5;
 
         this.onMessage = callbacks.onMessage;
         this.onHpChange = callbacks.onHpChange;
@@ -56,6 +66,7 @@ class BattleEngine {
         this.particleSystem.clear();
         this.isRunning = true;
         this.cameraObj = { x: 0, y: 0, zoom: 1 };
+        this.turnCount = 0;
 
         // Initial HP Update
         this.onHpChange('left', this.leftFighter.hp, this.leftFighter.maxHp);
@@ -65,7 +76,7 @@ class BattleEngine {
         if (typeof AudioSystem !== 'undefined') AudioSystem.playBattleMusic();
 
         // Start battle loop asynchronously
-        setTimeout(() => this.battleLoopTick(), 1000);
+        setTimeout(() => this.battleLoopTick(), 1000 * (this.timeScale || 1));
     }
 
     stop() {
@@ -74,18 +85,20 @@ class BattleEngine {
 
     // Helper to pause execution
     wait(ms) {
-        return new Promise(res => setTimeout(res, ms));
+        return new Promise(res => setTimeout(res, ms * (this.timeScale || 1)));
     }
 
     // Helper to tween a property on an object
     tween(obj, prop, target, durationMs) {
+        let actualDuration = durationMs * (this.timeScale || 1);
         return new Promise(res => {
             let start = obj[prop];
             let diff = target - start;
-            let startTime = performance.now();
+            let startTime = null;
             let step = (time) => {
+                if (!startTime) startTime = time;
                 let elapsed = time - startTime;
-                let t = elapsed / durationMs;
+                let t = elapsed / actualDuration;
                 if(t >= 1) {
                     obj[prop] = target;
                     res();
@@ -136,10 +149,14 @@ class BattleEngine {
         }
 
         // Loop
-        setTimeout(() => this.battleLoopTick(), 500);
+        setTimeout(() => this.battleLoopTick(), 500 * (this.timeScale || 1));
     }
 
     async executeTurn(attacker, defender, attackerSide, defenderSide) {
+        this.turnCount++;
+        let damageMult = 1.0 + (this.turnCount * 0.05); // Damage increases by 5% each turn
+        let healMult = Math.max(0.1, 1.0 - (this.turnCount * 0.05)); // Healing decreases down to 10%
+        
         // Tick cooldowns
         attacker.skills.forEach(s => s.tickCooldown());
 
@@ -153,22 +170,31 @@ class BattleEngine {
         let attackerSprite = attackerSide === 'left' ? this.leftSprite : this.rightSprite;
         let defenderSprite = defenderSide === 'left' ? this.leftSprite : this.rightSprite;
         let startX = attackerSprite.x;
+        let startY = attackerSprite.y;
+
+        let isPortrait = this.canvasHeight > this.canvasWidth;
+        let dx = isPortrait ? 0 : (attackerSide === 'left' ? 50 : -50);
+        let dy = isPortrait ? -50 : 0;
 
         // Timeline: Move forward
-        let forwardDist = attackerSide === 'left' ? 50 : -50;
-        await this.tween(attackerSprite, 'x', startX + forwardDist, 200);
+        let movePromises = [];
+        if(dx !== 0) movePromises.push(this.tween(attackerSprite, 'x', startX + dx, 200));
+        if(dy !== 0) movePromises.push(this.tween(attackerSprite, 'y', startY + dy, 200));
+        if(movePromises.length > 0) await Promise.all(movePromises);
 
         // Timeline: Attack animation
         attackerSprite.play('attack');
         
         // Camera Zoom to action
         this.tween(this.cameraObj, 'zoom', 1.1, 200);
-        this.tween(this.cameraObj, 'x', attackerSide === 'left' ? 50 : -50, 200);
+        this.tween(this.cameraObj, 'x', dx, 200);
+        this.tween(this.cameraObj, 'y', dy, 200);
 
         await this.wait(400); // Wait for hit frame roughly
 
         if(skill.type === 'heal') {
-            let amount = attacker.heal(40);
+            let baseHeal = Math.max(5, Math.floor(40 * healMult));
+            let amount = attacker.heal(baseHeal);
             this.onHpChange(attackerSide, attacker.hp, attacker.maxHp);
             this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 50, `+${amount}`, '#06d6a0', 30);
             this.particleSystem.addHitEffect(attackerSprite.x, attackerSprite.y, '#06d6a0', 20);
@@ -183,7 +209,7 @@ class BattleEngine {
             // Attack!
             // Calculate Damage slightly randomized
             let baseDmg = (attacker.atk * skill.power) / 50;
-            baseDmg = baseDmg / 5; // Reduced by 5x to prolong battle
+            baseDmg = (baseDmg / 5) * damageMult; // Apply scaling damage
             let actualDmg = defender.takeDamage(baseDmg * (0.8 + Math.random()*0.4));
             this.onHpChange(defenderSide, defender.hp, defender.maxHp);
 
@@ -202,8 +228,10 @@ class BattleEngine {
 
         // Timeline: Return
         this.tween(attackerSprite, 'x', startX, 300);
+        this.tween(attackerSprite, 'y', startY, 300);
         this.tween(this.cameraObj, 'zoom', 1.0, 300);
         this.tween(this.cameraObj, 'x', 0, 300);
+        this.tween(this.cameraObj, 'y', 0, 300);
         
         await this.wait(500);
 
@@ -242,7 +270,7 @@ class BattleEngine {
         // Draw Arena Background
         let bgImg = AssetGenerator.get('bg_arena');
         if(bgImg) {
-            this.ctx.drawImage(bgImg, 0, 0);
+            this.ctx.drawImage(bgImg, -100, -100);
         }
 
         // Setup Auras based on rarity

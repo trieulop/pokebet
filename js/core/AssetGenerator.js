@@ -86,23 +86,27 @@ class AssetGenerator {
         return img;
     }
 
-    static createGameBackground() {
+    static createGameBackground(w = 800, h = 600) {
+        const pad = 200; // Extra padding to hide borders during screen shake/move
+        const totalW = w + pad;
+        const totalH = h + pad;
+
         const canvas = document.createElement('canvas');
-        canvas.width = 800;
-        canvas.height = 600;
+        canvas.width = totalW;
+        canvas.height = totalH;
         const ctx = canvas.getContext('2d');
 
         // Sky
-        let grad = ctx.createLinearGradient(0, 0, 0, 400);
+        let grad = ctx.createLinearGradient(0, 0, 0, totalH);
         grad.addColorStop(0, '#1d3557');
         grad.addColorStop(1, '#457b9d');
         ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 800, 600);
+        ctx.fillRect(0, 0, totalW, totalH);
 
         // Ground / Arena
         ctx.fillStyle = '#2a9d8f';
         ctx.beginPath();
-        ctx.ellipse(400, 450, 500, 150, 0, 0, Math.PI * 2);
+        ctx.ellipse(totalW / 2, totalH * 0.75, totalW * 0.6, totalH * 0.25, 0, 0, Math.PI * 2);
         ctx.fill();
 
         // Arena border
@@ -114,8 +118,8 @@ class AssetGenerator {
         ctx.fillStyle = '#21867a';
         for(let i=0; i<50; i++) {
             ctx.beginPath();
-            let x = Math.random() * 800;
-            let y = 350 + Math.random() * 200;
+            let x = Math.random() * totalW;
+            let y = (totalH * 0.6) + (Math.random() * (totalH * 0.4));
             ctx.ellipse(x, y, 10 + Math.random()*20, 5 + Math.random()*5, 0, 0, Math.PI * 2);
             ctx.fill();
         }

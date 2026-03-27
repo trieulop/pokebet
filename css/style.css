@@ -5,14 +5,17 @@
     user-select: none;
 }
 
+body, html {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     background-color: #1a1a2e;
     color: #fff;
     font-family: 'Roboto', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
     overflow: hidden;
 }
 
@@ -23,12 +26,9 @@ h1, h2, h3, .name, .hp-txt, .btn, #battle-message, .points-display {
 
 #game-container {
     position: relative;
-    width: 800px;
-    height: 600px;
+    width: 100%;
+    height: 100%;
     background: #000;
-    box-shadow: 0 0 20px rgba(0,0,0,0.8);
-    border: 4px solid #333;
-    border-radius: 8px;
     overflow: hidden;
 }
 
@@ -428,21 +428,116 @@ canvas {
     border-radius: 4px;
 }
 
-/* Responsive Scaling for Container */
-@media (max-width: 850px) {
-    #game-container {
-        transform: scale(0.8);
+/* Mobile Display based on Screen Size */
+@media (max-width: 768px) {
+    #betting-screen .title {
+        margin-top: 80px;
+        margin-bottom: 10px;
+        font-size: 20px;
+    }
+
+    .matchup-container {
+        flex-direction: column;
+        gap: 8px;
+        overflow-y: auto;
+        max-height: calc(100vh - 100px);
+        width: 100%;
+        padding-bottom: 10px;
+    }
+    
+    .fighter-card {
+        width: 90%;
+        max-width: 400px;
+        padding: 10px 15px;
+    }
+
+    .fighter-card .name-box {
+        margin-bottom: 8px;
+        padding-bottom: 5px;
+    }
+
+    .card-content {
+        margin-bottom: 8px;
+    }
+
+    .win-prob {
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .btn-bet {
+        padding: 10px 0;
+        font-size: 16px;
+    }
+
+    .card-sprite {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .vs-text {
+        font-size: 16px;
+        margin: 5px 0;
+    }
+
+    /* Side-by-side Battle UI for Mobile */
+    .hp-bar-container {
+        width: 46%;
+        max-width: 170px;
+        padding: 6px;
+    }
+    .hp-bar-container.left {
+        top: 60px;
+        left: 2%;
+    }
+    .hp-bar-container.right {
+        top: 60px;
+        bottom: auto;
+        right: 2%;
+    }
+    
+    .card-info .name {
+        font-size: 11px;
+    }
+    .card-info .hp-txt {
+        font-size: 9px;
+    }
+    .bar-bg {
+        height: 8px;
+    }
+
+    #battle-message-box {
+        bottom: 15px;
+        height: 65px;
+        padding: 10px 15px;
+    }
+    #battle-message {
+        font-size: 12px;
+    }
+
+    #result-screen {
+        width: 90%;
+        padding: 20px 10px;
+    }
+    #result-title {
+        font-size: 24px;
+        margin-bottom: 15px;
+        white-space: nowrap;
+    }
+    #result-screen p {
+        font-size: 14px;
+        margin-bottom: 20px;
+        white-space: nowrap;
+    }
+    #btn-next-match {
+        width: 80%;
+        padding: 15px;
     }
 }
-@media (max-width: 650px) {
-    #game-container {
-        transform: scale(0.5);
-    }
-}
-@media (max-width: 400px) {
-    #game-container {
-        transform: scale(0.4);
-    }
+
+/* Dynamic Responsive Scaling applied via JS */
+#game-container {
+    transform-origin: center center;
 }
 
 /* Global Upgrade Button */
