@@ -5,7 +5,7 @@ const GameData = {
         'common': { name: 'コモン', multiplier: 1.0, color: null, prob: 0.5 },
         'rare': { name: 'レア', multiplier: 1.2, color: '#4cc9f0', prob: 0.3 },
         'epic': { name: 'エピック', multiplier: 1.5, color: '#9d4edd', prob: 0.15 },
-        'legendary': { name: 'レジェンダリー', multiplier: 2.0, color: '#ffd700', prob: 0.05 }
+        'legendary': { name: 'レジェン', multiplier: 2.0, color: '#ffd700', prob: 0.05 }
     },
 
     skills: [
@@ -106,6 +106,7 @@ const GameData = {
             let spd = data.stats.find(s => s.stat.name === 'speed').base_stat;
             let spriteUrl = data.sprites.front_default || data.sprites.back_default;
             let animatedUrl = data.sprites.other?.showdown?.front_default || data.sprites.versions?.["generation-v"]?.["black-white"]?.animated?.front_default;
+            let types = data.types.map(t => t.type.name);
             
             let spriteKey = `api_${data.id}`;
             if (!AssetGenerator.sprites[spriteKey]) {
@@ -116,7 +117,7 @@ const GameData = {
                 AssetGenerator.sprites[spriteKey] = img;
             }
             
-            let fd = { id: data.id, name, hp, atk, def, spd, spriteKey, uiSpriteUrl: animatedUrl || spriteUrl };
+            let fd = { id: data.id, name, hp, atk, def, spd, spriteKey, uiSpriteUrl: animatedUrl || spriteUrl, types };
             this.apiCache[data.id] = fd; // Cache by ID
             this.apiCache[idOrName] = fd; // Cache by requested term
             return fd;
@@ -125,14 +126,14 @@ const GameData = {
             let base = this.roster[Math.floor(Math.random() * this.roster.length)];
             return {
                 id: base.id, name: base.name, hp: base.baseHp, atk: base.baseAtk, def: base.baseDef, spd: base.baseSpd,
-                spriteKey: base.spriteKey, uiSpriteUrl: ''
+                spriteKey: base.spriteKey, uiSpriteUrl: '', types: ['normal']
             };
         }
     },
 
     async buildFighterInstance(idOrName, forcedRarity = null, bonusMultiplier = 0) {
         let fd = await this.fetchFighterData(idOrName);
-        let p = new Pokemon(fd.id, fd.name, fd.hp, fd.atk, fd.def, fd.spd, fd.spriteKey);
+        let p = new Pokemon(fd.id, fd.name, fd.hp, fd.atk, fd.def, fd.spd, fd.spriteKey, fd.types);
         p.uiSpriteUrl = fd.uiSpriteUrl;
         
         let rarity = forcedRarity ? forcedRarity : this.getRandomRarity();

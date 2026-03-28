@@ -1,3 +1,18 @@
+const TypeColors = {
+    normal: '#A8A77A', fire: '#EE8130', water: '#6390F0', electric: '#F7D02C',
+    grass: '#7AC74C', ice: '#96D9D6', fighting: '#C22E28', poison: '#A33EA1',
+    ground: '#E2BF65', flying: '#A98FF3', psychic: '#F95587', bug: '#A6B91A',
+    rock: '#B6A136', ghost: '#735797', dragon: '#6F35FC', dark: '#705746',
+    steel: '#B7B7CE', fairy: '#D685AD'
+};
+
+function getTypeIconHTML(type) {
+    let safeType = type.toLowerCase();
+    let color = TypeColors[safeType] || '#A8A77A';
+    let url = `https://raw.githubusercontent.com/duiker101/pokemon-type-svg-icons/master/icons/${safeType}.svg`;
+    return `<img src="${url}" style="width:20px;height:20px;border-radius:50%;background-color:${color};margin-right:4px;vertical-align:middle;box-shadow: 0 0 4px rgba(0,0,0,0.5); object-fit: contain; padding: 2px; box-sizing: border-box;" alt="${safeType}">`;
+}
+
 class UIManager {
     constructor(battleEngine) {
         this.battleEngine = battleEngine;
@@ -239,14 +254,31 @@ class UIManager {
         // Calculate simple win probability based on raw stat totals
         let lStats = this.leftFighter.maxHp + this.leftFighter.atk + this.leftFighter.def + this.leftFighter.spd;
         let rStats = this.rightFighter.maxHp + this.rightFighter.atk + this.rightFighter.def + this.rightFighter.spd;
+        
+        // Force the win rate gap to be within 10% (between 45% and 55%) 
+        // We do this by artificially scaling the right fighter's stats to be very close to the left fighter's.
+        // The scale targets lStats +/- 10% equivalent.
+        let targetRStats = lStats * (0.9 + Math.random() * 0.2); 
+        let scale = targetRStats / rStats;
+        
+        this.rightFighter.maxHp = Math.floor(this.rightFighter.maxHp * scale);
+        // We ensure current hp is matched to scaled maxHp
+        this.rightFighter.hp = this.rightFighter.maxHp;
+        this.rightFighter.atk = Math.floor(this.rightFighter.atk * scale);
+        this.rightFighter.def = Math.floor(this.rightFighter.def * scale);
+        this.rightFighter.spd = Math.floor(this.rightFighter.spd * scale);
+
+        // Recalculate true stats after rounding
+        rStats = this.rightFighter.maxHp + this.rightFighter.atk + this.rightFighter.def + this.rightFighter.spd;
         let total = lStats + rStats;
         
         let lProb = Math.round((lStats / total) * 100);
         let rProb = 100 - lProb;
 
         // Populate Left Card
-        this.els.leftName.innerText = this.leftFighter.name;
-        this.els.leftName.style.color = GameData.rarity[this.leftFighter.rarity].color || '#fff';
+        let lTypeIcon = getTypeIconHTML(this.leftFighter.types[0]);
+        let lColor = GameData.rarity[this.leftFighter.rarity].color || '#fff';
+        this.els.leftName.innerHTML = `${lTypeIcon}<span style="color:${lColor}">${this.leftFighter.name}</span>`;
         this.els.leftStatsHp.innerText = this.leftFighter.maxHp;
         this.els.leftStatsAtk.innerText = this.leftFighter.atk;
         this.els.leftStatsDef.innerText = this.leftFighter.def;
@@ -256,8 +288,9 @@ class UIManager {
         this.els.leftRarity.style.color = GameData.rarity[this.leftFighter.rarity].color || '#aaa';
 
         // Populate Right Card
-        this.els.rightName.innerText = this.rightFighter.name;
-        this.els.rightName.style.color = GameData.rarity[this.rightFighter.rarity].color || '#fff';
+        let rTypeIcon = getTypeIconHTML(this.rightFighter.types[0]);
+        let rColor = GameData.rarity[this.rightFighter.rarity].color || '#fff';
+        this.els.rightName.innerHTML = `${rTypeIcon}<span style="color:${rColor}">${this.rightFighter.name}</span>`;
         this.els.rightStatsHp.innerText = this.rightFighter.maxHp;
         this.els.rightStatsAtk.innerText = this.rightFighter.atk;
         this.els.rightStatsDef.innerText = this.rightFighter.def;

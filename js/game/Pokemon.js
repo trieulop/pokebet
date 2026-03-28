@@ -1,5 +1,5 @@
 class Pokemon {
-    constructor(id, name, baseHp, baseAtk, baseDef, baseSpd, spriteKey) {
+    constructor(id, name, baseHp, baseAtk, baseDef, baseSpd, spriteKey, types = ['normal']) {
         this.id = id;
         this.name = name;
         this.baseHp = baseHp;
@@ -7,6 +7,7 @@ class Pokemon {
         this.baseDef = baseDef;
         this.baseSpd = baseSpd;
         this.spriteKey = spriteKey;
+        this.types = types;
         this.skills = [];
 
         // Rarity modifiers initialized later
@@ -64,7 +65,7 @@ class Pokemon {
     }
 
     clone() {
-        let p = new Pokemon(this.id, this.name, this.baseHp, this.baseAtk, this.baseDef, this.baseSpd, this.spriteKey);
+        let p = new Pokemon(this.id, this.name, this.baseHp, this.baseAtk, this.baseDef, this.baseSpd, this.spriteKey, this.types);
         p.skills = this.skills.map(s => s.clone());
         return p;
     }

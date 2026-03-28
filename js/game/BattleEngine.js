@@ -211,13 +211,13 @@ class BattleEngine {
             let amount = attacker.heal(baseHeal);
             this.onHpChange(attackerSide, attacker.hp, attacker.maxHp);
             this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 100, `+${amount}`, '#06d6a0', 30);
-            this.particleSystem.addHitEffect(attackerSprite.x, attackerSprite.y, '#06d6a0', 20);
+            this.particleSystem.addSkillEffect(skill.id, attackerSprite.x, Math.max(0, attackerSprite.y - 50), attackerSide, attackerSprite.x, attackerSprite.y);
             this.onMessage(`${attacker.name} はHPを回復した！`);
         } 
         else if (skill.type === 'buff') {
             attacker.def = Math.floor(attacker.def * 1.5) + 20; // 割合上昇に変更（元の防御力の1.5倍＋底上げ20）
             this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 100, `防御アップ`, '#457b9d', 24);
-            this.particleSystem.addHitEffect(attackerSprite.x, attackerSprite.y, '#457b9d', 20);
+            this.particleSystem.addSkillEffect(skill.id, attackerSprite.x, attackerSprite.y, attackerSide, attackerSprite.x, attackerSprite.y);
         }
         else {
             // Attack!
@@ -231,7 +231,7 @@ class BattleEngine {
             this.shakeCamera(10, 10);
             defenderSprite.play('hit');
             defenderSprite.flashWhite = true;
-            this.particleSystem.addHitEffect(defenderSprite.x, defenderSprite.y, skill.effectAnim, 30);
+            this.particleSystem.addSkillEffect(skill.id, defenderSprite.x, defenderSprite.y, attackerSide, attackerSprite.x, attackerSprite.y);
             this.particleSystem.addFloatingText(defenderSprite.x, defenderSprite.y - 100, `-${actualDmg}`, '#e63946', 32);
 
             await this.wait(200);
