@@ -69,7 +69,8 @@ class UIManager {
             
             // Global Upgrade Toggle
             btnGlobalUpgrade: document.getElementById('btn-global-upgrade'),
-            nextMatchBtn: document.getElementById('btn-next-match')
+            nextMatchBtn: document.getElementById('btn-next-match'),
+            btnBack: document.getElementById('bet-btn-back')
         };
 
         this.initEvents();
@@ -81,6 +82,12 @@ class UIManager {
         this.els.nextMatchBtn.addEventListener('click', () => {
             this.els.resultScreen.classList.add('hidden');
             this.generateMatchup();
+        });
+
+        this.els.btnBack.addEventListener('click', () => {
+            this.els.betScreen.classList.remove('active');
+            document.getElementById('top-bar').classList.add('hidden');
+            document.getElementById('game-selection-screen').classList.add('active');
         });
 
         this.els.btnGlobalUpgrade.addEventListener('click', () => {

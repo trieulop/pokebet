@@ -46,6 +46,7 @@ class TrainUIController {
             defeatBox:      document.getElementById('train-defeat-box'),
             btnRestart:     document.getElementById('train-btn-restart'),
             btnReselect:    document.getElementById('train-btn-reselect'),
+            btnBack:        document.getElementById('train-btn-back'),
             
             loadingText: document.getElementById('train-loading-text')
         };
@@ -63,6 +64,10 @@ class TrainUIController {
             this.totalWins = 0;
             this.consecutiveWins = 0;
             this.boot();
+        });
+        this.els.btnBack.addEventListener('click', () => {
+            this.hideAll();
+            document.getElementById('game-selection-screen').classList.add('active');
         });
     }
 

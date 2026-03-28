@@ -518,6 +518,23 @@ canvas {
     100% { opacity: 0.5; }
 }
 
+.btn-back {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #6c757d !important;
+    border-color: #fff !important;
+    padding: 12px 24px !important;
+    font-size: 14px !important;
+    z-index: 101;
+}
+
+.btn-back:hover {
+    background: #5a6268 !important;
+    transform: translateX(-50%) translateY(-2px) !important;
+}
+
 #train-candidate-cards {
     /* PC: 2 columns × 2 rows – centered horizontally & vertically */
     display: grid;
@@ -726,17 +743,21 @@ canvas {
 
 /* Mobile Display based on Screen Size */
 @media (max-width: 768px) {
+    #top-bar {
+        padding: 5px 15px !important; /* 15px -> 5px (ポイント表示を上に詰める) */
+    }
+
     #betting-screen .title {
-        margin-top: 80px;
-        margin-bottom: 10px;
-        font-size: 20px;
+        margin-top: 25px !important; /* 45px -> 25px (進化ボタンとの間隔を詰める) */
+        margin-bottom: 5px !important;
+        font-size: 24px !important; /* 18px -> 24px (1.33倍強拡大) */
     }
 
     .matchup-container {
         flex-direction: column;
         gap: 8px;
         overflow-y: auto;
-        max-height: calc(100vh - 100px);
+        max-height: calc(100vh - 120px);
         width: 100%;
         padding-bottom: 10px;
     }
@@ -744,6 +765,20 @@ canvas {
     .selection-container {
         flex-direction: column;
         gap: 20px;
+    }
+
+    /* スマホ時: "POKE" で改行、"GAME CENTER" は1行に収める */
+    .game-title {
+        font-size: clamp(20px, 7vw, 36px) !important; /* 画面幅に応じて縮小 */
+        white-space: normal;
+        margin-bottom: 30px !important;
+    }
+    .title-poke {
+        display: block; /* "Poke" を独立した行に */
+    }
+    .title-gamecenter {
+        display: block; /* "Game Center" を次の行に、縮小により収まる */
+        white-space: nowrap; /* "GAME CENTER" 自体は折り返さない */
     }
 
     .btn-game-select {
@@ -759,36 +794,36 @@ canvas {
     .fighter-card {
         width: 90%;
         max-width: 400px;
-        padding: 10px 15px;
+        padding: 5px 15px !important; /* 10px -> 5px 縦を詰める */
     }
 
     .fighter-card .name-box {
-        margin-bottom: 8px;
-        padding-bottom: 5px;
+        margin-bottom: 5px !important;
+        padding-bottom: 3px !important;
     }
 
     .card-content {
-        margin-bottom: 8px;
+        margin-bottom: 5px !important;
     }
 
     .win-prob {
-        margin-bottom: 8px;
-        font-size: 14px;
+        margin-bottom: 5px !important;
+        font-size: 13px !important;
     }
 
     .btn-bet {
-        padding: 10px 0;
-        font-size: 16px;
+        padding: 8px 0 !important; /* 10px -> 8px */
+        font-size: 14px !important;
     }
 
     .card-sprite {
-        width: 80px;
-        height: 80px;
+        width: 70px !important; /* 80px -> 70px */
+        height: 70px !important;
     }
     
     .vs-text {
-        font-size: 16px;
-        margin: 5px 0;
+        font-size: 14px !important;
+        margin: 2px 0 !important;
     }
 
     /* Side-by-side Battle UI for Mobile */
@@ -815,6 +850,38 @@ canvas {
     }
     .bar-bg {
         height: 8px;
+    }
+
+    /* 指示に基づきモバイルでのサイズを微調整 */
+    .points-display {
+        font-size: 15px !important; /* 16px -> 15px */
+    }
+
+    .btn-global-upgrade {
+        padding: 3px 10px !important; /* 5px -> 3px (さらに縦幅を圧縮) */
+        margin-left: 10px !important;
+    }
+    
+    .btn-global-upgrade .text-large {
+        font-size: 12px !important; /* 13px -> 12px */
+    }
+    
+    .btn-global-upgrade .text-small {
+        font-size: 9px !important;
+    }
+
+    .btn-back {
+        padding: 6px 12px !important; /* 8px -> 6px */
+        bottom: 10px !important; /* さらに下に寄せて重複回避 */
+        font-size: 11px !important;
+        white-space: nowrap; /* 改行防止 */
+        min-width: 120px;
+    }
+
+    /* スマホでの意図しない「浮き」を修正（hover状態の無効化） */
+    .train-card:hover, .fighter-card:hover, .btn-game-select:hover {
+        transform: none !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
     }
 
     #battle-message-box {
@@ -866,9 +933,11 @@ canvas {
 
 
     .train-prep-title {
-        font-size: 14px;
-        margin: 0;
+        font-size: 24px !important; /* 14px -> 24px (拡大) */
+        margin-top: 20px !important;
+        margin-bottom: 15px !important;
         flex-shrink: 0;
+        text-align: center;
     }
 
     #train-loading-text {

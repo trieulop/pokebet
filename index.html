@@ -25,7 +25,7 @@
         <div id="ui-layer" style="position:relative; z-index: 10;">
             <!-- Game Selection Screen -->
             <div id="game-selection-screen" class="screen active" style="z-index: 100;">
-                <h1 class="title" style="font-size: 40px; text-shadow: 4px 4px 0 #3a0ca3; color: #4cc9f0; margin-bottom: 50px; text-align: center;">Poke Game Center</h1>
+                <h1 class="title game-title" style="font-size: 40px; text-shadow: 4px 4px 0 #3a0ca3; color: #4cc9f0; margin-bottom: 50px; text-align: center;"><span class="title-poke">Poke </span><span class="title-gamecenter">Game Center</span></h1>
                 <div class="selection-container">
                     <button id="btn-select-pokebet" class="btn btn-game-select" style="background: #e63946;">
                         <span class="game-number">①</span>
@@ -85,6 +85,7 @@
                         </div>
                     </div>
                 </div>
+                <button id="bet-btn-back" class="btn btn-back">GAME CENTER</button>
             </div>
 
             <!-- Battle Status overlay (HP bars etc., rendered in Canvas or DOM. Using DOM for crisp text) -->
@@ -123,6 +124,7 @@
                 <p id="train-loading-text">候補を探しています...</p>
                 <!-- Cards pinned to the bottom -->
                 <div id="train-candidate-cards"></div>
+                <button id="train-btn-back" class="btn btn-back">GAME CENTER</button>
             </div>
 
             <div id="train-battle-ui" class="screen">
