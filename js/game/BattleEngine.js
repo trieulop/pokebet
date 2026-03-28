@@ -1,5 +1,13 @@
 // Handles the visual side and sequence of battles
 class BattleEngine {
+    static CONFIG = {
+        TURN_DAMAGE_SCALE_RATE: 0.05,
+        TURN_HEAL_DECAY_RATE: 0.05,
+        HEAL_MIN_MULT: 0.1,
+        INITIAL_TURN_WAIT: 1000,
+        BETWEEN_TURN_WAIT: 500
+    };
+
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
@@ -99,7 +107,7 @@ class BattleEngine {
         if (typeof AudioSystem !== 'undefined') AudioSystem.playBattleMusic();
 
         // Start battle loop asynchronously
-        setTimeout(() => this.battleLoopTick(), 1000 * (this.timeScale || 1));
+        setTimeout(() => this.battleLoopTick(), BattleEngine.CONFIG.INITIAL_TURN_WAIT * (this.timeScale || 1));
     }
 
     stop() {
@@ -184,16 +192,19 @@ class BattleEngine {
         }
 
         // Loop
-        setTimeout(() => this.battleLoopTick(), 500 * (this.timeScale || 1));
+        setTimeout(() => this.battleLoopTick(), BattleEngine.CONFIG.BETWEEN_TURN_WAIT * (this.timeScale || 1));
     }
 
     async executeTurn(attacker, defender, attackerSide, defenderSide) {
         this.turnCount++;
-        let damageMult = 1.0 + (this.turnCount * 0.05); // Damage increases by 5% each turn
-        let healMult = Math.max(0.1, 1.0 - (this.turnCount * 0.05)); // Healing decreases down to 10%
+        let damageMult = 1.0 + (this.turnCount * BattleEngine.CONFIG.TURN_DAMAGE_SCALE_RATE); // Damage increases each turn
+        let healMult = Math.max(BattleEngine.CONFIG.HEAL_MIN_MULT, 1.0 - (this.turnCount * BattleEngine.CONFIG.TURN_HEAL_DECAY_RATE)); // Healing decreases
         
         // Tick cooldowns
         attacker.skills.forEach(s => s.tickCooldown());
+        
+        // Reset protection status from previous use when starting a new turn
+        attacker.isProtecting = false;
 
         // Select skill
         let skill = null;
@@ -254,13 +265,18 @@ class BattleEngine {
             this.onMessage(`${attacker.name} はHPを回復した！`);
         } 
         else if (skill.type === 'buff') {
-            // 防御バフが無限に指数関数的に倍増してダメージが1に張り付く不具合を修正
-            // 倍率を少しマイルドにし、上限値（200）を設けて長期戦によるダメージインフレが上回るように調整
-            if (attacker.def < 200) {
-                attacker.def = Math.floor(attacker.def * 1.2) + 15;
-                if (attacker.def > 200) attacker.def = 200;
+            if (skill.id === 'shield') {
+                attacker.isProtecting = true;
+                this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 100, `まもる!`, '#457b9d', 24);
+                this.onMessage(`${attacker.name} は 身を守る構えをとった！`);
+            } else {
+                // Other buffs (fallback if any added later)
+                if (attacker.def < 200) {
+                    attacker.def = Math.floor(attacker.def * 1.2) + 15;
+                    if (attacker.def > 200) attacker.def = 200;
+                }
+                this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 100, `防御アップ`, '#457b9d', 24);
             }
-            this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 100, `防御アップ`, '#457b9d', 24);
             this.particleSystem.addSkillEffect(skill.id, attackerSprite.x, attackerSprite.y, attackerSide, attackerSprite.x, attackerSprite.y);
         }
         else {
@@ -272,7 +288,15 @@ class BattleEngine {
             // Apply effectiveness if available
             let effort = (typeof effectiveness !== 'undefined') ? effectiveness : 1.0;
             
-            let actualDmg = defender.takeDamage(baseDmg * (0.8 + Math.random()*0.4) * effort);
+            let finalDmgMult = effort;
+            if (defender.isProtecting) {
+                finalDmgMult *= 0.5;
+                this.onMessage(`${defender.name} は攻撃を防いだ！`);
+                this.particleSystem.addFloatingText(defenderSprite.x, defenderSprite.y - 120, `GUARD!`, '#4cc9f0', 28);
+                defender.isProtecting = false; // Consume protection
+            }
+            
+            let actualDmg = defender.takeDamage(baseDmg * (0.8 + Math.random()*0.4) * finalDmgMult);
             this.onHpChange(defenderSide, defender.hp, defender.maxHp);
 
             // Impact Effects

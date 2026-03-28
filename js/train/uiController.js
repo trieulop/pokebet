@@ -1,12 +1,19 @@
 const STAMINA_MAX = 100;
-const STAMINA_INIT = 50;
 
 class TrainUIController {
+    static CONFIG = {
+        WIN_STAGE_CLEAR: 3,
+        STAT_WIN_MULT: 1.1,
+        STAT_LOSS_MULT: 0.95,
+        STAMINA_INITIAL_BASE: 30,
+        STAMINA_REGEN_BASE: 10
+    };
+
     constructor(battleEngine) {
         this.engine = battleEngine;
         this.playerFighter = null;
         this.enemyFighter = null;
-        this.stamina = STAMINA_INIT;
+        this.stamina = 0;
         this.isLastMatchWin = false;
         this.statDeltaMult = 1.0;
         this.consecutiveWins = 0; // New: for final stage clear
@@ -66,14 +73,12 @@ class TrainUIController {
             this.boot();
         });
         this.els.btnBack.addEventListener('click', () => {
-            this.hideAll();
-            document.getElementById('game-selection-screen').classList.add('active');
+            UIUtils.showScreen('game-selection-screen');
         });
     }
 
     showScreen(id) {
-        // Reuse shared logic from UIManager
-        UIManager.prototype.showScreen.call(null, id);
+        UIUtils.showScreen(id);
     }
 
     // ---------- STAMINA HELPERS ----------
@@ -87,8 +92,10 @@ class TrainUIController {
     }
 
     refundTurnStamina() {
-        // Each turn the player regenerates 15 stamina
-        this.stamina = Math.min(STAMINA_MAX, this.stamina + 15);
+        // Each turn the player regenerates stamina based on SPD
+        // Formula: 10 + (SPD / 10)
+        let regen = 10 + (this.playerFighter.spd / 10);
+        this.stamina = Math.min(STAMINA_MAX, this.stamina + regen);
         this.updateStaminaBar();
     }
 
@@ -119,16 +126,16 @@ class TrainUIController {
         candidates.forEach(f => {
             let card = document.createElement('div');
             card.className = 'fighter-card train-card';
-            let tIcon = getTypeIconHTML(f.types[0]);
+            let tIcon = UIUtils.getTypeIconHTML(f.types[0]);
             
             card.innerHTML = `
                 <div class="name-box"><span class="name">${tIcon} ${f.name}</span></div>
                 <div class="card-content">
                     <div class="stats-box">
-                        <div>HP: ${f.maxHp}</div>
-                        <div>ATK: ${f.atk}</div>
-                        <div>DEF: ${f.def}</div>
-                        <div>SPD: ${f.spd}</div>
+                        <div class="stat-row"><span class="stat-icon">🩸</span>: ${f.maxHp}</div>
+                        <div class="stat-row"><span class="stat-icon">⚔️</span>: ${f.atk}</div>
+                        <div class="stat-row"><span class="stat-icon">🛡️</span>: ${f.def}</div>
+                        <div class="stat-row"><span class="stat-icon">🥾</span>: ${f.spd}</div>
                     </div>
                     <img class="card-sprite" src="${f.uiSpriteUrl}">
                 </div>
@@ -137,7 +144,6 @@ class TrainUIController {
             
             card.querySelector('.train-btn-select').addEventListener('click', () => {
                 this.playerFighter = f;
-                this.stamina = STAMINA_INIT;
                 this.startMatch();
             });
             
@@ -148,7 +154,10 @@ class TrainUIController {
     // ---------- BATTLE ----------
     async startMatch() {
         this.showScreen('train-battle-ui');
-        this.stamina = STAMINA_INIT;
+        
+        // Initial stamina depends on SPD: 30 + (SPD / 3), cap at STAMINA_MAX
+        this.stamina = Math.min(STAMINA_MAX, 30 + (this.playerFighter.spd / 3));
+        
         this.updateStaminaBar();
         
         this.els.battleMsg.innerText = '野生のポケモンを探しています...';
@@ -217,12 +226,12 @@ class TrainUIController {
             
             this.els.resTitle.innerText = '勝利！';
             this.els.resTitle.style.color = '#06d6a0';
-            this.els.resSub.innerText = 'ステータスを1つ選んで 10% 強化！';
+            this.els.resSub.innerText = `ステータスを1つ選んで ${Math.round((TrainUIController.CONFIG.STAT_WIN_MULT - 1) * 100)}% 強化！`;
             this.els.resInstruction.innerText = '1つ選んで強化！';
-            this.statDeltaMult = 1.1;
+            this.statDeltaMult = TrainUIController.CONFIG.STAT_WIN_MULT;
 
             // --- GAME CLEAR CHECK ---
-            if (this.playerFighter.isFinalEvolution && this.consecutiveWins >= 3) {
+            if (this.playerFighter.isFinalEvolution && this.consecutiveWins >= TrainUIController.CONFIG.WIN_STAGE_CLEAR) {
                 this.els.resTitle.innerText = '🏆 全制覇 🏆';
                 this.els.resTitle.style.color = '#ffd700';
                 this.els.resSub.innerText = '伝説のトレーナーの称号を手に入れました！';
@@ -241,9 +250,9 @@ class TrainUIController {
             
             this.els.resTitle.innerText = '敗北...';
             this.els.resTitle.style.color = '#e63946';
-            this.els.resSub.innerText = 'ステータスを1つ選んで 5% 減少...';
+            this.els.resSub.innerText = `ステータスを1つ選んで ${Math.round((1 - TrainUIController.CONFIG.STAT_LOSS_MULT) * 100)}% 減少...`;
             this.els.resInstruction.innerText = '1つ選んで...(弱体化)';
-            this.statDeltaMult = 0.95;
+            this.statDeltaMult = TrainUIController.CONFIG.STAT_LOSS_MULT;
 
             this.els.statPicker.classList.remove('hidden');
             this.els.clearBox.classList.add('hidden');
@@ -271,49 +280,54 @@ class TrainUIController {
         }
         this.playerFighter.hp = this.playerFighter.maxHp; // heal for next fight
 
-        // Check Evolution milestone (every 3 total wins)
-        let prevId = this.playerFighter.id;
-        this.playerFighter.winCount = this.totalWins; // Sync
-        this.playerFighter = await EvolutionService.handleEvolution(this.playerFighter);
-        
-        // Show progression messages
-        if (prevId !== this.playerFighter.id) {
-            this.isTransitioning = true;
-            // --- New: Visual Evolution Sequence ---
-            this.els.resSprite.classList.add('evolving');
+        // Check Evolution milestone (every 3 total wins) - ONLY on Victory
+        if (this.isLastMatchWin) {
+            let prevId = this.playerFighter.id;
+            this.playerFighter.winCount = this.totalWins; // Sync
+            this.playerFighter = await EvolutionService.handleEvolution(this.playerFighter);
             
-            // Wait for 2s while it "pulses"
-            setTimeout(() => {
-                this.els.resSprite.classList.remove('evolving');
+            // Show progression messages
+            if (prevId !== this.playerFighter.id) {
+                this.isTransitioning = true;
+                // --- New: Visual Evolution Sequence ---
+                this.els.resSprite.classList.add('evolving');
                 
-                // Update UI to show the new evolved form
-                this.els.resName.innerText   = this.playerFighter.name;
-                this.els.resHp.innerText     = this.playerFighter.maxHp;
-                this.els.resAtk.innerText    = this.playerFighter.atk;
-                this.els.resDef.innerText    = this.playerFighter.def;
-                this.els.resSpd.innerText    = this.playerFighter.spd;
-                this.els.resSprite.src       = this.playerFighter.uiSpriteUrl;
-                
-                // Pop effect!
-                this.els.resSprite.classList.add('evolved-pop');
+                // Wait for 2s while it "pulses"
                 setTimeout(() => {
-                    this.els.resSprite.classList.remove('evolved-pop');
+                    this.els.resSprite.classList.remove('evolving');
                     
-                    // --- Notification at the moment of evolution ---
-                    if (this.playerFighter.isFinalEvolution) {
-                        alert('最終形態到達！\nここからは 3連勝 でゲームクリアだ！');
-                    } else {
-                        alert('おめでとう！進化成功！\n次のステージまで 通算3勝 を目指して！');
-                    }
+                    // Update UI to show the new evolved form
+                    this.els.resName.innerText   = this.playerFighter.name;
+                    this.els.resHp.innerText     = this.playerFighter.maxHp;
+                    this.els.resAtk.innerText    = this.playerFighter.atk;
+                    this.els.resDef.innerText    = this.playerFighter.def;
+                    this.els.resSpd.innerText    = this.playerFighter.spd;
+                    this.els.resSprite.src       = this.playerFighter.uiSpriteUrl;
+                    
+                    // Pop effect!
+                    this.els.resSprite.classList.add('evolved-pop');
+                    setTimeout(() => {
+                        this.els.resSprite.classList.remove('evolved-pop');
+                        
+                        // --- Notification at the moment of evolution ---
+                        if (this.playerFighter.isFinalEvolution) {
+                            alert(`最終形態到達！\nここからは ${TrainUIController.CONFIG.WIN_STAGE_CLEAR}連勝 でゲームクリアだ！`);
+                        } else {
+                            alert(`おめでとう！進化成功！\n次のステージまで 通算${EvolutionService.CONFIG.WIN_MILESTONE}勝 を目指して！`);
+                        }
 
-                    this.isTransitioning = false;
-                    this.startMatch(); // Continue AFTER evolution finishes
-                }, 600);
-            }, 2000);
+                        this.isTransitioning = false;
+                        this.startMatch(); // Continue AFTER evolution finishes
+                    }, 600);
+                }, 2000);
 
-            this.consecutiveWins = 0; 
+                this.consecutiveWins = 0; 
+            } else {
+                // No evolution, proceed immediately to next battle
+                this.startMatch();
+            }
         } else {
-            // No evolution, proceed immediately to next battle
+            // After a loss, no evolution check, just proceed to next match
             this.startMatch();
         }
     }

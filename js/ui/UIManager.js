@@ -1,22 +1,14 @@
-const TypeColors = {
-    normal: '#A8A77A', fire: '#EE8130', water: '#6390F0', electric: '#F7D02C',
-    grass: '#7AC74C', ice: '#96D9D6', fighting: '#C22E28', poison: '#A33EA1',
-    ground: '#E2BF65', flying: '#A98FF3', psychic: '#F95587', bug: '#A6B91A',
-    rock: '#B6A136', ghost: '#735797', dragon: '#6F35FC', dark: '#705746',
-    steel: '#B7B7CE', fairy: '#D685AD'
-};
-
-function getTypeIconHTML(type) {
-    let safeType = type.toLowerCase();
-    let color = TypeColors[safeType] || '#A8A77A';
-    let url = `https://raw.githubusercontent.com/duiker101/pokemon-type-svg-icons/master/icons/${safeType}.svg`;
-    return `<img src="${url}" style="width:20px;height:20px;border-radius:50%;background-color:${color};margin-right:4px;vertical-align:middle;box-shadow: 0 0 4px rgba(0,0,0,0.5); object-fit: contain; padding: 2px; box-sizing: border-box;" alt="${safeType}">`;
-}
-
 class UIManager {
+    static CONFIG = {
+        INITIAL_POINTS: 1000,
+        UPGRADE_COST: 500,
+        POINTS_SAVE_KEY: 'poketrain_points_v1',
+        UPGRADE_LVL_KEY: 'poketrain_upgrade_v1'
+    };
+
     constructor(battleEngine) {
         this.battleEngine = battleEngine;
-        this.points = 1000;
+        this.points = UIManager.CONFIG.INITIAL_POINTS;
         this.upgradeLevel = 0; // 0 to max, determines bonusMultiplier
 
         this.leftFighter = null;
@@ -78,6 +70,10 @@ class UIManager {
         this.updatePointsDisplay();
     }
 
+    showScreen(id) {
+        UIUtils.showScreen(id);
+    }
+
     initEvents() {
         this.els.nextMatchBtn.addEventListener('click', () => {
             this.els.resultScreen.classList.add('hidden');
@@ -85,9 +81,8 @@ class UIManager {
         });
 
         this.els.btnBack.addEventListener('click', () => {
-            this.els.betScreen.classList.remove('active');
+            UIUtils.showScreen('game-selection-screen');
             document.getElementById('top-bar').classList.add('hidden');
-            document.getElementById('game-selection-screen').classList.add('active');
         });
 
         this.els.btnGlobalUpgrade.addEventListener('click', () => {
@@ -97,8 +92,8 @@ class UIManager {
                 this.els.btnGlobalUpgrade.classList.remove('active-upgrade');
             } else {
                 // Turn on
-                if (this.points < 500) {
-                    alert('ポイントが足りません（500ポイント必要です）。');
+                if (this.points < UIManager.CONFIG.UPGRADE_COST) {
+                    alert(`ポイントが足りません（${UIManager.CONFIG.UPGRADE_COST}ポイント必要です）。`);
                     return;
                 }
                 this.upgradeNextBet = true;
@@ -124,9 +119,9 @@ class UIManager {
                     return;
                 }
 
-                let cost = 500;
+                let cost = UIManager.CONFIG.UPGRADE_COST;
                 if(this.points < cost) {
-                    alert('ポイントが足りません（500ポイント必要です）。');
+                    alert(`ポイントが足りません（${cost}ポイント必要です）。`);
                     return;
                 }
 
@@ -283,7 +278,7 @@ class UIManager {
         let rProb = 100 - lProb;
 
         // Populate Left Card
-        let lTypeIcon = getTypeIconHTML(this.leftFighter.types[0]);
+        let lTypeIcon = UIUtils.getTypeIconHTML(this.leftFighter.types[0]);
         let lColor = GameData.rarity[this.leftFighter.rarity].color || '#fff';
         this.els.leftName.innerHTML = `${lTypeIcon}<span style="color:${lColor}">${this.leftFighter.name}</span>`;
         this.els.leftStatsHp.innerText = this.leftFighter.maxHp;
@@ -295,7 +290,7 @@ class UIManager {
         this.els.leftRarity.style.color = GameData.rarity[this.leftFighter.rarity].color || '#aaa';
 
         // Populate Right Card
-        let rTypeIcon = getTypeIconHTML(this.rightFighter.types[0]);
+        let rTypeIcon = UIUtils.getTypeIconHTML(this.rightFighter.types[0]);
         let rColor = GameData.rarity[this.rightFighter.rarity].color || '#fff';
         this.els.rightName.innerHTML = `${rTypeIcon}<span style="color:${rColor}">${this.rightFighter.name}</span>`;
         this.els.rightStatsHp.innerText = this.rightFighter.maxHp;
@@ -321,7 +316,7 @@ class UIManager {
         this.upgradeNextBet = false;
         if(this.els.btnGlobalUpgrade) this.els.btnGlobalUpgrade.classList.remove('active-upgrade');
 
-        this.showScreen('betting-screen');
+        UIUtils.showScreen('betting-screen');
     }
 
     // Shared helper for updating HP bars across different screens
@@ -332,17 +327,9 @@ class UIManager {
         els.fill.style.backgroundColor = perc > 50 ? '#4cc9f0' : (perc > 20 ? '#fca311' : '#e63946');
     }
 
-    showScreen(id) {
-        // Hide all major screens first
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        if(id) {
-            const target = document.getElementById(id);
-            if(target) target.classList.add('active');
-        }
-    }
 
     startMatch() {
-        this.showScreen('battle-ui');
+        UIUtils.showScreen('battle-ui');
         
         if (this.els.btnGlobalUpgrade) this.els.btnGlobalUpgrade.classList.add('hidden');
 

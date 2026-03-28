@@ -1,12 +1,17 @@
 class EvolutionService {
+    static CONFIG = {
+        WIN_MILESTONE: 3,
+        STAT_BOOST_MULT: 1.25
+    };
+
     /**
      * Called after each battle win milestone (every 3 wins).
      * - If evolution is possible  → returns evolved fighter (isFinalEvolution: false)
      * - If already at final form  → returns same fighter with isFinalEvolution: true
      */
     static async handleEvolution(fighter) {
-        // Only attempt evolution after every 3 wins
-        if (fighter.winCount > 0 && fighter.winCount % 3 === 0) {
+        // Only attempt evolution after every X wins
+        if (fighter.winCount > 0 && fighter.winCount % this.CONFIG.WIN_MILESTONE === 0) {
             let nextId = await GameData.getEvolutionId(fighter.id);
 
             if (nextId && nextId !== fighter.id) {

@@ -15,13 +15,13 @@ window.addEventListener('load', async () => {
     const topBar = document.getElementById('top-bar');
 
     btnPokeBet.addEventListener('click', async () => {
-        uiManager.showScreen('betting-screen');
+        UIUtils.showScreen('betting-screen');
         topBar.classList.remove('hidden');
         await uiManager.generateMatchup();
     });
 
     btnPokeTrain.addEventListener('click', () => {
-        uiManager.showScreen(null); // Just hide all first
+        UIUtils.showScreen(null); // Just hide all first
         trainController.boot();
     });
 
@@ -62,9 +62,10 @@ window.addEventListener('load', async () => {
         if(dt < 15) return;
         lastTime = timestamp;
 
-        // Render battle if active
-        // The render method clears the canvas and draws everything
-        battleEngine.render();
+        // Render battle only if active to save resources
+        if (battleEngine.isRunning) {
+            battleEngine.render();
+        }
     }
 
     requestAnimationFrame(gameLoop);
