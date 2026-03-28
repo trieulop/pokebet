@@ -43,7 +43,9 @@ class TrainUIController {
             resInstruction: document.getElementById('train-res-instruction'),
             statPicker:     document.getElementById('train-stat-picker'),
             clearBox:       document.getElementById('train-clear-box'),
+            defeatBox:      document.getElementById('train-defeat-box'),
             btnRestart:     document.getElementById('train-btn-restart'),
+            btnReselect:    document.getElementById('train-btn-reselect'),
             
             loadingText: document.getElementById('train-loading-text')
         };
@@ -57,6 +59,11 @@ class TrainUIController {
         document.getElementById('train-btn-def').addEventListener('click', () => this.applyStatChange('def'));
         document.getElementById('train-btn-spd').addEventListener('click', () => this.applyStatChange('spd'));
         this.els.btnRestart.addEventListener('click', () => location.reload());
+        this.els.btnReselect.addEventListener('click', () => {
+            this.totalWins = 0;
+            this.consecutiveWins = 0;
+            this.boot();
+        });
     }
 
     hideAll() {
@@ -225,6 +232,7 @@ class TrainUIController {
                 this.els.statPicker.classList.remove('hidden');
                 this.els.clearBox.classList.add('hidden');
             }
+            this.els.defeatBox.classList.add('hidden');
         } else {
             AudioSystem.playDefeatMusic();
             this.consecutiveWins = 0; // Reset on loss
@@ -237,6 +245,7 @@ class TrainUIController {
 
             this.els.statPicker.classList.remove('hidden');
             this.els.clearBox.classList.add('hidden');
+            this.els.defeatBox.classList.remove('hidden');
         }
         
         // Populate the pokemon card

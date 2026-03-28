@@ -66,8 +66,8 @@ class PokemonService {
         
         let eStats = enemy.maxHp + enemy.atk + enemy.def + enemy.spd;
         
-        // Scale enemy stats to be within -5% to +3% of player's total stats (95% to 103%)
-        let targetEStats = pStats * (0.95 + Math.random() * 0.08);
+        // Scale enemy stats to be within -7% to -2% of player's total stats (93% to 98%)
+        let targetEStats = pStats * (0.93 + Math.random() * 0.05);
         let scale = targetEStats / eStats;
         
         enemy.maxHp = Math.floor(enemy.maxHp * scale);
