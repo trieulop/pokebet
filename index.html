@@ -23,8 +23,23 @@
         
         <!-- UI Layer overlaying Canvas -->
         <div id="ui-layer" style="position:relative; z-index: 10;">
+            <!-- Game Selection Screen -->
+            <div id="game-selection-screen" class="screen active" style="z-index: 100;">
+                <h1 class="title" style="font-size: 40px; text-shadow: 4px 4px 0 #3a0ca3; color: #4cc9f0; margin-bottom: 50px; text-align: center;">Poke Game Center</h1>
+                <div class="selection-container">
+                    <button id="btn-select-pokebet" class="btn btn-game-select" style="background: #e63946;">
+                        <span class="game-number">①</span>
+                        <div class="game-text"><span>Poke</span><br><span>Bet</span></div>
+                    </button>
+                    <button id="btn-select-poketrain" class="btn btn-game-select" style="background: #457b9d;">
+                        <span class="game-number">②</span>
+                        <div class="game-text"><span>Poke</span><br><span>Train</span></div>
+                    </button>
+                </div>
+            </div>
+
             <!-- Top bar: Points & Menu -->
-            <div id="top-bar">
+            <div id="top-bar" class="hidden">
                 <div class="points-display">ポイント: <span id="player-points">1000</span></div>
                 <button id="btn-global-upgrade" class="btn btn-global-upgrade">
                     <span class="text-large">進化</span><br>
@@ -33,7 +48,7 @@
             </div>
 
             <!-- Betting Screen -->
-            <div id="betting-screen" class="screen active">
+            <div id="betting-screen" class="screen">
                 <h1 class="title">どちらに賭ける？</h1>
                 <div class="matchup-container">
                     <div class="fighter-card" id="fighter-left">
@@ -101,6 +116,80 @@
             </div>
 
             <!-- Upgrade UI removed -->
+
+            <!-- PokeTrain Screens -->
+            <div id="train-prep-screen" class="screen">
+                <h1 class="title train-prep-title">パートナーを選ぼう！</h1>
+                <p id="train-loading-text">候補を探しています...</p>
+                <!-- Cards pinned to the bottom -->
+                <div id="train-candidate-cards"></div>
+            </div>
+
+            <div id="train-battle-ui" class="screen">
+                <!-- HP Bars (top corners) -->
+                <div class="hp-bar-container left">
+                    <div class="card-info">
+                        <span id="train-name-left" class="name">???</span> 
+                        <span id="train-hp-text-left" class="hp-txt">100/100</span>
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill" id="train-hp-fill-left"></div></div>
+                </div>
+                <div class="hp-bar-container right">
+                    <div class="card-info">
+                        <span id="train-hp-text-right" class="hp-txt">100/100</span>
+                        <span id="train-name-right" class="name">???</span> 
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill" id="train-hp-fill-right"></div></div>
+                </div>
+                
+                <!-- Bottom panel: message + stamina + skills -->
+                <div id="train-bottom-panel">
+                    <!-- Battle Message -->
+                    <div id="train-battle-message-box">
+                        <p id="train-battle-message">あいて が あらわれた！</p>
+                    </div>
+                    <!-- Stamina -->
+                    <div id="train-stamina-row">
+                        <span id="train-stamina-label">STAMINA</span>
+                        <div id="train-stamina-bg">
+                            <div id="train-stamina-fill"></div>
+                        </div>
+                        <span id="train-stamina-text">100/100</span>
+                    </div>
+                    <!-- Skills -->
+                    <div id="train-skill-container"></div>
+                </div>
+            </div>
+
+            <!-- Train Result Screen: full-screen overlay with pokemon card -->
+            <div id="train-result-overlay" class="screen">
+                <h2 id="train-result-title">勝利！</h2>
+                <p id="train-result-sub">ステータスを強化しよう！</p>
+                <!-- Player pokemon card -->
+                <div id="train-result-card" class="fighter-card">
+                    <div class="name-box"><span id="train-res-name" class="name">???</span></div>
+                    <div class="card-content">
+                        <div class="stats-box" id="train-res-stats">
+                            <div>HP: <span id="train-res-hp"></span></div>
+                            <div>ATK: <span id="train-res-atk"></span></div>
+                            <div>DEF: <span id="train-res-def"></span></div>
+                            <div>SPD: <span id="train-res-spd"></span></div>
+                        </div>
+                        <img id="train-res-sprite" class="card-sprite" src="">
+                    </div>
+                    <!-- Stat buttons inside the card -->
+                    <p id="train-res-instruction" style="font-size:10px;font-family:'Press Start 2P';color:#ffd700;margin-bottom:10px;">1つ選んで強化！</p>
+                    <div id="train-stat-picker">
+                        <button id="train-btn-hp" class="btn train-stat-btn">MAX HP</button>
+                        <button id="train-btn-atk" class="btn train-stat-btn">ATK</button>
+                        <button id="train-btn-def" class="btn train-stat-btn">DEF</button>
+                        <button id="train-btn-spd" class="btn train-stat-btn">SPD</button>
+                    </div>
+                    <div id="train-clear-box" class="hidden">
+                        <button id="train-btn-restart" class="btn btn-bet" style="width:100%;margin-top:20px;background:#ffd700;color:#000;">最初から遊ぶ！</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -115,6 +204,13 @@
     <script src="js/game/AIController.js"></script>
     <script src="js/game/BattleEngine.js"></script>
     <script src="js/ui/UIManager.js"></script>
+    
+    <!-- Train Scripts -->
+    <script src="js/train/pokemonService.js"></script>
+    <script src="js/train/evolutionService.js"></script>
+    <script src="js/train/battleController.js"></script>
+    <script src="js/train/uiController.js"></script>
+    
     <script src="js/main.js"></script>
 </body>
 </html>

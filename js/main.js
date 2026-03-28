@@ -5,9 +5,26 @@ window.addEventListener('load', async () => {
     // Initialize systems
     const battleEngine = new BattleEngine('gameCanvas');
     const uiManager = new UIManager(battleEngine);
+    const trainController = new TrainUIController(battleEngine);
 
-    // Initial game state setup
-    await uiManager.generateMatchup();
+    // Game Selection Menu Initialization
+    const btnPokeBet = document.getElementById('btn-select-pokebet');
+    const btnPokeTrain = document.getElementById('btn-select-poketrain');
+    const selectionScreen = document.getElementById('game-selection-screen');
+    const bettingScreen = document.getElementById('betting-screen');
+    const topBar = document.getElementById('top-bar');
+
+    btnPokeBet.addEventListener('click', async () => {
+        selectionScreen.classList.remove('active');
+        bettingScreen.classList.add('active');
+        topBar.classList.remove('hidden');
+        await uiManager.generateMatchup();
+    });
+
+    btnPokeTrain.addEventListener('click', () => {
+        selectionScreen.classList.remove('active'); // Explicitly hide selection
+        trainController.boot();
+    });
 
     // Responsive full screen resizing
     function resizeGame() {

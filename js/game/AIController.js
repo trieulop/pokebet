@@ -52,6 +52,13 @@ class AIController {
                         // Might win the speed tie
                         score += 200;
                     }
+                    
+                    // Type Effectiveness Bonus
+                    if (typeof TrainBattleController !== 'undefined') {
+                        let eff = TrainBattleController.getEffectiveness(s.element, defender.types);
+                        if (eff > 1) score += 50; // Super effective bonus
+                        if (eff < 1) score -= 30; // Not very effective penalty
+                    }
                     break;
             }
 

@@ -20,6 +20,11 @@ class Pokemon {
         
         // Progression bonus
         this.bonusStats = 0;
+        
+        // PokeTrain specific
+        this.winCount = 0;
+        this.evolutionStage = 1;
+        this.playerControlled = false;
     }
 
     setup(rarityLevel, bonusMultiplier = 0) {

@@ -41,6 +41,10 @@ class BattleEngine {
         // Base positions
         this.posLeft = { x: 200, y: 400 };
         this.posRight = { x: 600, y: 350 };
+        
+        this.battleMode = 'auto'; // 'auto' or 'manual'
+        this.resolvePlayerInput = null;
+        this.forceBackground = null;
     }
 
     startBattle(leftFighter, rightFighter, callbacks) {
@@ -48,13 +52,18 @@ class BattleEngine {
         this.rightFighter = rightFighter;
         
         let isPortrait = this.canvasHeight > this.canvasWidth;
-        this.timeScale = isPortrait ? 1.2 : 1.0; // スマホのみ1.2倍遅く(時間は1.2倍かかる)
+        this.timeScale = isPortrait ? 1.2 : 1.0;
+        
+        // In manual mode there's a bottom panel, so raise sprites a bit
+        let yRatioL = (this.battleMode === 'manual') ? 0.58 : 0.65;
+        let yRatioR = (this.battleMode === 'manual') ? 0.54 : (isPortrait ? 0.65 : 0.60);
+        
         if (isPortrait) {
-            this.posLeft = { x: this.canvasWidth * 0.25, y: this.canvasHeight * 0.65 };
-            this.posRight = { x: this.canvasWidth * 0.75, y: this.canvasHeight * 0.65 };
+            this.posLeft  = { x: this.canvasWidth * 0.25, y: this.canvasHeight * yRatioL };
+            this.posRight = { x: this.canvasWidth * 0.75, y: this.canvasHeight * yRatioR };
         } else {
-            this.posLeft = { x: this.canvasWidth * 0.25, y: this.canvasHeight * 0.65 };
-            this.posRight = { x: this.canvasWidth * 0.75, y: this.canvasHeight * 0.6 };
+            this.posLeft  = { x: this.canvasWidth * 0.25, y: this.canvasHeight * yRatioL };
+            this.posRight = { x: this.canvasWidth * 0.75, y: this.canvasHeight * yRatioR };
         }
 
         document.getElementById('battle-sprite-layer').style.display = 'block';
@@ -142,18 +151,28 @@ class BattleEngine {
         let lSpeed = this.leftFighter.spd;
         let rSpeed = this.rightFighter.spd;
         
-        let first = this.leftFighter;
-        let second = this.rightFighter;
-        let firstSide = 'left';
-        let secondSide = 'right';
+        let first, second, firstSide, secondSide;
 
-        if(rSpeed > lSpeed) {
+        // Determine who goes first based on Speed (higher moves first)
+        // In case of speed tie, random choice for fairness
+        let leftGoesFirst = true;
+        if (rSpeed > lSpeed) {
+            leftGoesFirst = false;
+        } else if (lSpeed === rSpeed) {
+            leftGoesFirst = Math.random() < 0.5;
+        }
+
+        if (leftGoesFirst) {
+            first = this.leftFighter;
+            second = this.rightFighter;
+            firstSide = 'left';
+            secondSide = 'right';
+        } else {
             first = this.rightFighter;
             second = this.leftFighter;
             firstSide = 'right';
             secondSide = 'left';
         }
-
         // --- Turn 1 ---
         await this.executeTurn(first, second, firstSide, secondSide);
         if(!this.isRunning || !second.isAlive()) {
@@ -179,10 +198,28 @@ class BattleEngine {
         attacker.skills.forEach(s => s.tickCooldown());
 
         // Select skill
-        let skill = AIController.chooseSkill(attacker, defender);
+        let skill = null;
+        if (this.battleMode === 'manual' && attacker.playerControlled) {
+            this.onMessage(`${attacker.name} の番です！`);
+            skill = await new Promise(resolve => {
+                this.resolvePlayerInput = resolve;
+            });
+        } else {
+            skill = AIController.chooseSkill(attacker, defender);
+        }
+        
         skill.use();
 
         this.onMessage(`${attacker.name} の ${skill.name}！`);
+        
+        // Calculate Type Effectiveness (PokeTrain specific logic integration)
+        let effectiveness = 1.0;
+        if (typeof TrainBattleController !== 'undefined') {
+            effectiveness = TrainBattleController.getEffectiveness(skill.element, defender.types);
+            if (effectiveness > 1) this.onMessage(`${attacker.name} の ${skill.name}！\nこうかは ばつぐんだ！`);
+            if (effectiveness < 1 && effectiveness > 0) this.onMessage(`${attacker.name} の ${skill.name}！\nこうかは いまひとつの ようだ...`);
+        }
+
         if (typeof AudioSystem !== 'undefined') AudioSystem.speakSkill(skill.name);
         
         let attackerSprite = attackerSide === 'left' ? this.leftSprite : this.rightSprite;
@@ -233,7 +270,11 @@ class BattleEngine {
             // Calculate Damage slightly randomized
             let baseDmg = (attacker.atk * skill.power) / 50;
             baseDmg = (baseDmg / 5) * damageMult; // Apply scaling damage
-            let actualDmg = defender.takeDamage(baseDmg * (0.8 + Math.random()*0.4));
+            
+            // Apply effectiveness if available
+            let effort = (typeof effectiveness !== 'undefined') ? effectiveness : 1.0;
+            
+            let actualDmg = defender.takeDamage(baseDmg * (0.8 + Math.random()*0.4) * effort);
             this.onHpChange(defenderSide, defender.hp, defender.maxHp);
 
             // Impact Effects
@@ -310,10 +351,12 @@ class BattleEngine {
             }
         }
 
-        // Draw Arena Background
-        let bgImg = AssetGenerator.get('bg_arena');
+        // Draw Arena/Train Background – stretched to fill full canvas
+        let bgKey = this.forceBackground || 'bg_arena';
+        let bgImg = AssetGenerator.get(bgKey);
         if(bgImg) {
-            this.ctx.drawImage(bgImg, -100, -100);
+            // use the logical canvas dimensions so the bg always fills the viewport
+            this.ctx.drawImage(bgImg, 0, 0, this.canvasWidth, this.canvasHeight);
         }
 
         // Setup Auras based on rarity
