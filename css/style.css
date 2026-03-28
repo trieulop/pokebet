@@ -743,14 +743,14 @@ canvas {
 
 /* Mobile Display based on Screen Size */
 @media (max-width: 768px) {
-    #top-bar {
-        padding: 5px 15px !important; /* 15px -> 5px (ポイント表示を上に詰める) */
-    }
+    /* --- PokeBet & General UI --- */
+    #top-bar { padding: 5px 15px !important; }
+    .points-display { font-size: 15px !important; }
 
     #betting-screen .title {
-        margin-top: 25px !important; /* 45px -> 25px (進化ボタンとの間隔を詰める) */
+        margin-top: 25px !important;
         margin-bottom: 5px !important;
-        font-size: 24px !important; /* 18px -> 24px (1.33倍強拡大) */
+        font-size: 24px !important;
     }
 
     .matchup-container {
@@ -762,286 +762,123 @@ canvas {
         padding-bottom: 10px;
     }
     
-    .selection-container {
-        flex-direction: column;
-        gap: 20px;
-    }
+    .selection-container { flex-direction: column; gap: 20px; }
 
-    /* スマホ時: "POKE" で改行、"GAME CENTER" は1行に収める */
     .game-title {
-        font-size: clamp(20px, 7vw, 36px) !important; /* 画面幅に応じて縮小 */
+        font-size: clamp(20px, 7vw, 36px) !important;
         white-space: normal;
         margin-bottom: 30px !important;
     }
-    .title-poke {
-        display: block; /* "Poke" を独立した行に */
-    }
-    .title-gamecenter {
-        display: block; /* "Game Center" を次の行に、縮小により収まる */
-        white-space: nowrap; /* "GAME CENTER" 自体は折り返さない */
-    }
+    .title-poke, .title-gamecenter { display: block; }
+    .title-gamecenter { white-space: nowrap; }
 
-    .btn-game-select {
-        width: 80%;
-        max-width: 300px;
-        height: 180px; /* shorter rectangle on mobile */
-    }
-
-    .btn-game-select .game-text {
-        font-size: 28px;
-    }
+    .btn-game-select { width: 80%; max-width: 300px; height: 180px; }
+    .btn-game-select .game-text { font-size: 28px; }
     
-    .fighter-card {
-        width: 90%;
-        max-width: 400px;
-        padding: 5px 15px !important; /* 10px -> 5px 縦を詰める */
-    }
-
-    .fighter-card .name-box {
-        margin-bottom: 5px !important;
-        padding-bottom: 3px !important;
-    }
-
-    .card-content {
-        margin-bottom: 5px !important;
-    }
-
-    .win-prob {
-        margin-bottom: 5px !important;
-        font-size: 13px !important;
-    }
-
-    .btn-bet {
-        padding: 8px 0 !important; /* 10px -> 8px */
-        font-size: 14px !important;
-    }
-
-    .card-sprite {
-        width: 70px !important; /* 80px -> 70px */
-        height: 70px !important;
-    }
-    
-    .vs-text {
-        font-size: 14px !important;
-        margin: 2px 0 !important;
-    }
+    .fighter-card { width: 90%; max-width: 400px; padding: 5px 15px !important; }
+    .fighter-card .name-box { margin-bottom: 5px !important; padding-bottom: 3px !important; }
+    .card-content { margin-bottom: 5px !important; }
+    .win-prob { margin-bottom: 5px !important; font-size: 13px !important; }
+    .btn-bet { padding: 8px 0 !important; font-size: 14px !important; }
+    .card-sprite { width: 70px !important; height: 70px !important; }
+    .vs-text { font-size: 14px !important; margin: 2px 0 !important; }
 
     /* Side-by-side Battle UI for Mobile */
-    .hp-bar-container {
-        width: 46%;
-        max-width: 170px;
-        padding: 6px;
-    }
-    .hp-bar-container.left {
-        top: 60px;
-        left: 2%;
-    }
-    .hp-bar-container.right {
-        top: 60px;
-        bottom: auto;
-        right: 2%;
-    }
-    
-    .card-info .name {
-        font-size: 11px;
-    }
-    .card-info .hp-txt {
-        font-size: 9px;
-    }
-    .bar-bg {
-        height: 8px;
-    }
+    .hp-bar-container { width: 46%; max-width: 170px; padding: 6px; }
+    .hp-bar-container.left, .hp-bar-container.right { top: 60px; }
+    .hp-bar-container.left { left: 2%; }
+    .hp-bar-container.right { right: 2%; bottom: auto; }
+    .card-info .name { font-size: 11px; }
+    .card-info .hp-txt { font-size: 9px; }
+    .bar-bg { height: 8px; }
 
-    /* 指示に基づきモバイルでのサイズを微調整 */
-    .points-display {
-        font-size: 15px !important; /* 16px -> 15px */
-    }
-
-    .btn-global-upgrade {
-        padding: 3px 10px !important; /* 5px -> 3px (さらに縦幅を圧縮) */
-        margin-left: 10px !important;
-    }
-    
-    .btn-global-upgrade .text-large {
-        font-size: 12px !important; /* 13px -> 12px */
-    }
-    
-    .btn-global-upgrade .text-small {
-        font-size: 9px !important;
-    }
+    .btn-global-upgrade { padding: 3px 10px !important; margin-left: 10px !important; }
+    .btn-global-upgrade .text-large { font-size: 12px !important; }
+    .btn-global-upgrade .text-small { font-size: 9px !important; }
 
     .btn-back {
-        padding: 6px 12px !important; /* 8px -> 6px */
-        bottom: 10px !important; /* さらに下に寄せて重複回避 */
+        padding: 6px 12px !important;
+        bottom: 10px !important;
         font-size: 11px !important;
-        white-space: nowrap; /* 改行防止 */
+        white-space: nowrap;
         min-width: 120px;
     }
 
-    /* スマホでの意図しない「浮き」を修正（hover状態の無効化） */
+    /* Disable hover transforms on mobile */
     .train-card:hover, .fighter-card:hover, .btn-game-select:hover {
         transform: none !important;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
     }
 
-    #battle-message-box {
-        bottom: 15px;
-        height: 65px;
-        padding: 10px 15px;
-    }
-    #battle-message {
-        font-size: 12px;
-    }
+    #battle-message-box { bottom: 15px; height: 65px; padding: 10px 15px; }
+    #battle-message { font-size: 12px; }
 
-    #result-screen {
-        width: 90%;
-        padding: 20px 10px;
-    }
-    #result-title {
-        font-size: 24px;
-        margin-bottom: 15px;
-        white-space: nowrap;
-    }
-    #result-screen p {
-        font-size: 14px;
-        margin-bottom: 20px;
-        white-space: nowrap;
-    }
-    #btn-next-match {
-        width: 80%;
-        padding: 15px;
-    }
+    #result-screen { width: 90%; padding: 20px 10px; }
+    #result-title { font-size: 24px; margin-bottom: 15px; white-space: nowrap; }
+    #result-screen p { font-size: 14px; margin-bottom: 20px; white-space: nowrap; }
+    #btn-next-match { width: 80%; padding: 15px; }
     
-    /* ===== PokeTrain モバイル ===== */
-
-    /* タイトルを上部に固定、コンテンツを縦中央に */
+    /* --- PokeTrain Mobile Styles --- */
     #train-prep-screen {
-        justify-content: flex-start;  /* Flex-start is needed for overflow-y: auto */
+        justify-content: flex-start;
         align-items: center;
         gap: 12px;
         overflow-y: auto;             
         padding: 20px 0;
         -webkit-overflow-scrolling: touch;
     }
-
-    /* Content centering trick that respects overflow */
-    #train-prep-screen::before,
-    #train-prep-screen::after {
-        content: '';
-        margin: auto;
-    }
-
+    #train-prep-screen::before, #train-prep-screen::after { content: ''; margin: auto; }
 
     .train-prep-title {
-        font-size: 24px !important; /* 14px -> 24px (拡大) */
+        font-size: 24px !important;
         margin-top: 20px !important;
         margin-bottom: 15px !important;
         flex-shrink: 0;
         text-align: center;
     }
 
-    #train-loading-text {
-        font-size: 14px;
-        margin: 0;
-    }
+    #train-loading-text { font-size: 14px; margin: 0; }
 
     #train-candidate-cards {
-        /* 2列 × 2行: 行高は内容に合わせる（autoでOK） */
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto;   /* ← 1fr をやめてautoで余白ゼロ */
+        grid-template-rows: auto auto;
         padding: 0;
         gap: 8px;
-        flex: none;                      /* flexコンテナに引き伸ばされない */
-        width: calc(100% - 16px);       /* 左右8pxマージン */
+        flex: none;
+        width: calc(100% - 16px);
         max-width: 100%;
-        max-height: none;
         align-items: start;
         overflow: visible;
     }
 
-    /* カードは内容に合わせた高さ（引き伸ばしなし） */
     .train-card {
         width: 100%;
         max-width: none;
         padding: 8px 10px;
-        overflow: hidden;
-        height: auto;                    /* 高さを固定しない */
-        align-self: start;              /* グリッド内で上揃え */
+        height: auto;
+        align-self: start;
     }
+    .train-card .name-box { margin-bottom: 5px; padding-bottom: 4px; }
+    .train-card .name { font-size: 13px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .train-card .card-content { margin-bottom: 6px; align-items: center; gap: 6px; }
+    .train-card .card-sprite { width: 80px !important; height: 80px !important; flex-shrink: 0; }
+    .train-card .stats-box { font-size: 11px !important; line-height: 1.55; white-space: nowrap; flex: 1; min-width: 0; }
 
-    .train-card .name-box {
-        margin-bottom: 5px;
-        padding-bottom: 4px;
-    }
+    .train-btn-select { font-size: 11px !important; padding: 7px 0 !important; margin-top: 6px; }
 
-    .train-card .name {
-        font-size: 13px !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
-    }
-
-    .train-card .card-content {
-        margin-bottom: 6px;
-        align-items: center;
-        gap: 6px;
-    }
-
-    /* スプライト: 3桁stats(例:100)が改行しない範囲で大きめに */
-    .train-card .card-sprite {
-        width: 80px !important;
-        height: 80px !important;
-        flex-shrink: 0;
-    }
-
-    /* stats: 3桁でも "ATK: 100" が1行に収まるよう nowrap + 11px */
-    .train-card .stats-box {
-        font-size: 11px !important;
-        line-height: 1.55;
-        white-space: nowrap;
-        flex: 1;
-        min-width: 0;
-    }
-
-    .train-btn-select {
-        font-size: 11px !important;
-        padding: 7px 0 !important;
-        margin-top: 6px;
-    }
-
-    #train-bottom-panel {
-        padding: 8px 10px 24px; /* More bottom padding for mobile safe area */
-        gap: 6px;
-    }
-
-    #train-battle-message-box {
-        min-height: 40px;
-    }
-
-    #train-battle-message {
-        font-size: 11px;
-    }
+    #train-bottom-panel { padding: 8px 10px 24px; gap: 6px; }
+    #train-battle-message-box { min-height: 40px; }
+    #train-battle-message { font-size: 11px; }
 
     #train-skill-container {
-        grid-template-columns: repeat(2, 1fr); /* 2x2 on mobile for better touch */
+        grid-template-columns: repeat(2, 1fr);
         gap: 6px;
         margin-top: 4px;
     }
 
-    .skill-btn {
-        font-size: 9px;
-        padding: 10px 4px;
-        border-radius: 16px;
-    }
-
-    #train-result-card {
-        width: 92%;
-    }
-
-    #train-stat-picker {
-        flex-wrap: wrap; /* Allow wrapping on mobile touch screens */
-    }
+    .skill-btn { font-size: 9px; padding: 10px 4px; border-radius: 16px; }
+    #train-result-card { width: 92%; }
+    #train-stat-picker { flex-wrap: wrap; }
 }
 
 /* Dynamic Responsive Scaling applied via JS */

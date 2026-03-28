@@ -131,35 +131,62 @@ const GameData = {
         }
     },
 
-    async buildFighterInstance(idOrName, forcedRarity = null, bonusMultiplier = 0) {
+    assignRandomSkills(pokemon, count = 3) {
+        let availableSkills = [...this.skills].filter(s => s.id !== 'tackle');
+        
+        // 分類分け
+        let typeSkills = availableSkills.filter(s => s.type === 'attack');
+        let utilitySkills = availableSkills.filter(s => s.type === 'buff' || s.type === 'heal');
+        
+        typeSkills.sort(() => Math.random() - 0.5);
+        utilitySkills.sort(() => Math.random() - 0.5);
+        
+        let chosenIds = ['tackle'];
+        
+        // 攻撃スキルを優先的に追加
+        if (typeSkills.length > 0) chosenIds.push(typeSkills[0].id);
+        if (typeSkills.length > 1 && count > 2) chosenIds.push(typeSkills[1].id);
+        
+        // 補助スキルを追加
+        if (utilitySkills.length > 0 && chosenIds.length < count + 1) {
+            chosenIds.push(utilitySkills[0].id);
+        }
+        
+        // 足りない場合はランダムに埋める
+        availableSkills.sort(() => Math.random() - 0.5);
+        while (chosenIds.length < count + 1 && availableSkills.length > 0) {
+            let skill = availableSkills.pop();
+            if (!chosenIds.includes(skill.id)) chosenIds.push(skill.id);
+        }
+        
+        pokemon.setSkills(chosenIds.slice(0, count + 1));
+    },
+
+    async buildFighterInstance(idOrName, forcedRarity = null, bonusMultiplier = 0, skillCount = 2) {
         let fd = await this.fetchFighterData(idOrName);
         let p = new Pokemon(fd.id, fd.name, fd.hp, fd.atk, fd.def, fd.spd, fd.spriteKey, fd.types);
         p.uiSpriteUrl = fd.uiSpriteUrl;
         
         let rarity = forcedRarity ? forcedRarity : this.getRandomRarity();
-        let availableSkills = [...this.skills].filter(s => s.id !== 'tackle');
-        availableSkills.sort(() => Math.random() - 0.5);
-        let chosenIds = ['tackle', availableSkills[0].id, availableSkills[1].id];
-        
-        p.setSkills(chosenIds);
         p.setup(rarity, bonusMultiplier);
+
+        this.assignRandomSkills(p, skillCount);
+        
         return p;
     },
 
     async generateSpecificFighterAPI(id, forceLegendary = false) {
-        return await this.buildFighterInstance(id, forceLegendary ? 'legendary' : null, 0.5);
+        return await this.buildFighterInstance(id, forceLegendary ? 'legendary' : null, 0.5, 2);
     },
 
     async generateRandomFighterAPI(bonusMultiplier = 0) {
         let randId;
-        // 雷系（でんきタイプ）が出現する確率を約20%に増やす
         if (Math.random() < 0.2) {
-            // 人気のでんきタイプポケモンの全国図鑑番号リスト
             const electricIds = [25, 26, 81, 82, 100, 101, 125, 135, 145, 172, 179, 180, 181, 239, 243, 309, 310, 311, 312, 403, 404, 405, 417, 462, 466, 479, 522, 523, 587, 595, 596, 602, 603, 604, 644, 702, 737, 738, 777, 785, 848, 849, 877, 894];
             randId = electricIds[Math.floor(Math.random() * electricIds.length)];
         } else {
-            randId = Math.floor(Math.random() * 898) + 1; // Gen 1-8
+            randId = Math.floor(Math.random() * 898) + 1;
         }
-        return await this.buildFighterInstance(randId, null, bonusMultiplier);
+        return await this.buildFighterInstance(randId, null, bonusMultiplier, 2);
     }
 };

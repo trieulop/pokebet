@@ -68,8 +68,6 @@ class BattleEngine {
 
         document.getElementById('battle-sprite-layer').style.display = 'block';
 
-        document.getElementById('battle-sprite-layer').style.display = 'block';
-
         this.leftSprite = new Sprite(leftFighter.spriteKey);
         this.leftSprite.bindDOM(document.getElementById('dom-sprite-left'), leftFighter.uiSpriteUrl);
         this.leftSprite.x = this.posLeft.x;

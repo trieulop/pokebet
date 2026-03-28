@@ -324,10 +324,21 @@ class UIManager {
         this.showScreen('betting-screen');
     }
 
+    // Shared helper for updating HP bars across different screens
+    static updateHpBar(els, current, max) {
+        let perc = Math.max(0, (current / max) * 100);
+        els.txt.innerText = `${current}/${max}`;
+        els.fill.style.width = `${perc}%`;
+        els.fill.style.backgroundColor = perc > 50 ? '#4cc9f0' : (perc > 20 ? '#fca311' : '#e63946');
+    }
+
     showScreen(id) {
-        this.els.betScreen.classList.remove('active');
-        this.els.battleUi.classList.remove('active');
-        if(id) document.getElementById(id).classList.add('active');
+        // Hide all major screens first
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        if(id) {
+            const target = document.getElementById(id);
+            if(target) target.classList.add('active');
+        }
     }
 
     startMatch() {
@@ -344,16 +355,10 @@ class UIManager {
                 this.els.bMsg.innerText = msg;
             },
             onHpChange: (side, current, max) => {
-                let perc = Math.max(0, (current / max) * 100);
-                if(side === 'left') {
-                    this.els.bHpTxtL.innerText = `${current}/${max}`;
-                    this.els.bFillL.style.width = `${perc}%`;
-                    this.els.bFillL.style.backgroundColor = perc > 50 ? '#4cc9f0' : (perc > 20 ? '#fca311' : '#e63946');
-                } else {
-                    this.els.bHpTxtR.innerText = `${current}/${max}`;
-                    this.els.bFillR.style.width = `${perc}%`;
-                    this.els.bFillR.style.backgroundColor = perc > 50 ? '#4cc9f0' : (perc > 20 ? '#fca311' : '#e63946');
-                }
+                const els = side === 'left' 
+                    ? { txt: this.els.bHpTxtL, fill: this.els.bFillL } 
+                    : { txt: this.els.bHpTxtR, fill: this.els.bFillR };
+                UIManager.updateHpBar(els, current, max);
             },
             onEnd: (winnerSide) => {
                 this.handleResult(winnerSide);

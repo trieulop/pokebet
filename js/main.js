@@ -15,14 +15,13 @@ window.addEventListener('load', async () => {
     const topBar = document.getElementById('top-bar');
 
     btnPokeBet.addEventListener('click', async () => {
-        selectionScreen.classList.remove('active');
-        bettingScreen.classList.add('active');
+        uiManager.showScreen('betting-screen');
         topBar.classList.remove('hidden');
         await uiManager.generateMatchup();
     });
 
     btnPokeTrain.addEventListener('click', () => {
-        selectionScreen.classList.remove('active'); // Explicitly hide selection
+        uiManager.showScreen(null); // Just hide all first
         trainController.boot();
     });
 

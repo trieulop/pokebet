@@ -71,8 +71,9 @@ class TrainUIController {
         });
     }
 
-    hideAll() {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    showScreen(id) {
+        // Reuse shared logic from UIManager
+        UIManager.prototype.showScreen.call(null, id);
     }
 
     // ---------- STAMINA HELPERS ----------
@@ -108,8 +109,7 @@ class TrainUIController {
 
     // ---------- BOOT (Preparation) ----------
     async boot() {
-        this.hideAll();
-        this.els.prepScreen.classList.add('active');
+        this.showScreen('train-prep-screen');
         this.els.loadingText.style.display = 'block';
         this.els.cardsContainer.innerHTML = '';
         
@@ -147,8 +147,7 @@ class TrainUIController {
 
     // ---------- BATTLE ----------
     async startMatch() {
-        this.hideAll();
-        this.els.battleUi.classList.add('active');
+        this.showScreen('train-battle-ui');
         this.stamina = STAMINA_INIT;
         this.updateStaminaBar();
         
@@ -166,12 +165,10 @@ class TrainUIController {
         this.engine.startBattle(this.playerFighter, this.enemyFighter, {
             onMessage: (msg) => { this.els.battleMsg.innerText = msg; },
             onHpChange: (side, current, max) => {
-                let perc = Math.max(0, (current / max) * 100);
-                let txt  = side === 'left' ? this.els.battleHpTxtL : this.els.battleHpTxtR;
-                let fill = side === 'left' ? this.els.battleFillL  : this.els.battleFillR;
-                txt.innerText = `${current}/${max}`;
-                fill.style.width = `${perc}%`;
-                fill.style.backgroundColor = perc > 50 ? '#4cc9f0' : (perc > 20 ? '#fca311' : '#e63946');
+                const els = side === 'left' 
+                    ? { txt: this.els.battleHpTxtL, fill: this.els.battleFillL } 
+                    : { txt: this.els.battleHpTxtR, fill: this.els.battleFillR };
+                UIManager.updateHpBar(els, current, max);
             },
             onEnd: (winnerSide) => {
                 this.handleResult(winnerSide);
@@ -261,8 +258,7 @@ class TrainUIController {
         this.els.resSpd.innerText    = this.playerFighter.spd;
         this.els.resSprite.src       = this.playerFighter.uiSpriteUrl;
         
-        this.hideAll();
-        this.els.resultOverlay.classList.add('active');
+        this.showScreen('train-result-overlay');
     }
 
     async applyStatChange(statName) {
