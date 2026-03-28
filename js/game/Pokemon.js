@@ -51,6 +51,7 @@ class Pokemon {
 
     heal(amount) {
         let healAmount = Math.floor(this.maxHp * (amount / 100)); // Heal is % based for simplicity
+        if (healAmount < 10) healAmount = 10; // Ensure minimum heal is 10
         this.hp += healAmount;
         if(this.hp > this.maxHp) this.hp = this.maxHp;
         return healAmount;

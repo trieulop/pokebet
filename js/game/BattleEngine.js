@@ -27,6 +27,10 @@ class BattleEngine {
         this.shakeTicks = 0;
         this.shakeIntensity = 0;
         
+        // Cache states
+        this._lastLayerTransform = '';
+        this._layerOriginSet = false;
+        
         // Callbacks
         this.onMessage = null;
         this.onHpChange = null;
@@ -215,7 +219,12 @@ class BattleEngine {
             this.onMessage(`${attacker.name} はHPを回復した！`);
         } 
         else if (skill.type === 'buff') {
-            attacker.def = Math.floor(attacker.def * 1.5) + 20; // 割合上昇に変更（元の防御力の1.5倍＋底上げ20）
+            // 防御バフが無限に指数関数的に倍増してダメージが1に張り付く不具合を修正
+            // 倍率を少しマイルドにし、上限値（200）を設けて長期戦によるダメージインフレが上回るように調整
+            if (attacker.def < 200) {
+                attacker.def = Math.floor(attacker.def * 1.2) + 15;
+                if (attacker.def > 200) attacker.def = 200;
+            }
             this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 100, `防御アップ`, '#457b9d', 24);
             this.particleSystem.addSkillEffect(skill.id, attackerSprite.x, attackerSprite.y, attackerSide, attackerSprite.x, attackerSprite.y);
         }
@@ -291,8 +300,14 @@ class BattleEngine {
         let layerDom = document.getElementById('battle-sprite-layer');
         if (layerDom) {
             let layerTransform = `translate(${this.canvasWidth/2}px, ${this.canvasHeight/2}px) scale(${this.cameraObj.zoom}) translate(${-this.canvasWidth/2 + this.cameraObj.x + cx}px, ${-this.canvasHeight/2 + cy}px)`;
-            layerDom.style.transform = layerTransform;
-            layerDom.style.transformOrigin = '0 0';
+            if (this._lastLayerTransform !== layerTransform) {
+                layerDom.style.transform = layerTransform;
+                this._lastLayerTransform = layerTransform;
+            }
+            if (!this._layerOriginSet) {
+                layerDom.style.transformOrigin = '0 0';
+                this._layerOriginSet = true;
+            }
         }
 
         // Draw Arena Background

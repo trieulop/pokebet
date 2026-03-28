@@ -21,9 +21,10 @@ class Particle {
         this.y += this.dy;
         this.life--;
         this.angle += this.spin;
-        // Gravity for particles
+        // Gravity for physical particles
         if(!this.text) {
-            if (this.type !== 'line' && this.type !== 'beam' && this.type !== 'cross' && this.type !== 'slash') {
+            const noGravityTypes = ['line', 'beam', 'cross', 'slash', 'lightning', 'thunderbolt', 'starburst', 'megabeam', 'daimonji', 'waterbeam', 'ring'];
+            if (!noGravityTypes.includes(this.type)) {
                 this.dy += 0.2; 
             }
         } else {
@@ -150,6 +151,44 @@ class Particle {
                 ctx.closePath();
                 ctx.fillStyle = this.color;
                 ctx.fill();
+            } else if (this.type === 'daimonji') {
+                ctx.globalCompositeOperation = 'lighter';
+                let s = this.size; // scale
+                
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                // Draw function for the "大" shape (width narrowed by ~1.2x)
+                const drawDai = () => {
+                    ctx.beginPath();
+                    // Horizontal stroke (left to right)
+                    ctx.moveTo(-s * 1.65, -s * 0.5);
+                    ctx.lineTo(s * 1.65, -s * 0.5);
+                    // Vertical center curve (top down bending leftish)
+                    ctx.moveTo(0, -s * 2.5);
+                    ctx.quadraticCurveTo(0, s * 0.5, -s * 1.25, s * 2);
+                    // Right leg
+                    ctx.moveTo(0, -s * 0.5);
+                    ctx.quadraticCurveTo(s * 0.65, s * 0.5, s * 1.25, s * 2);
+                };
+
+                // Outer red glow
+                drawDai();
+                ctx.lineWidth = s * 1.5;
+                ctx.strokeStyle = '#e63946'; 
+                ctx.stroke();
+
+                // Orange mid glow
+                drawDai();
+                ctx.lineWidth = s * 0.8;
+                ctx.strokeStyle = '#ffb703';
+                ctx.stroke();
+
+                // Yellow/White core
+                drawDai();
+                ctx.lineWidth = s * 0.3;
+                ctx.strokeStyle = '#fff';
+                ctx.stroke();
             } else if (this.type === 'megabeam') {
                 ctx.globalCompositeOperation = 'lighter';
                 
@@ -188,6 +227,50 @@ class Particle {
                 ctx.lineTo(startX, size * 0.4);
                 ctx.fillStyle = '#ffffff'; 
                 ctx.fill();
+            } else if (this.type === 'waterbeam') {
+                ctx.globalCompositeOperation = 'lighter';
+                
+                let dir = this.dx > 0 ? 1 : -1; 
+                let startX = 0; 
+                let endX = 1500 * dir; 
+                let size = this.size;
+                
+                // Deep blue outer glow
+                ctx.beginPath();
+                ctx.moveTo(startX, -size * 1.5);
+                ctx.lineTo(endX, -size * 2.5);
+                ctx.lineTo(endX, size * 2.5);
+                ctx.lineTo(startX, size * 1.5);
+                ctx.fillStyle = '#0077b6'; 
+                ctx.fill();
+
+                // Cyan mid glow
+                ctx.beginPath();
+                ctx.moveTo(startX, -size * 1.0);
+                ctx.lineTo(endX, -size * 1.5);
+                ctx.lineTo(endX, size * 1.5);
+                ctx.lineTo(startX, size * 1.0);
+                ctx.fillStyle = '#4cc9f0'; 
+                ctx.fill();
+                
+                // White/Lightblue core
+                ctx.beginPath();
+                ctx.moveTo(startX, -size * 0.4);
+                ctx.lineTo(endX, -size * 0.8);
+                ctx.lineTo(endX, size * 0.8);
+                ctx.lineTo(startX, size * 0.4);
+                ctx.fillStyle = '#e0fbfc'; 
+                ctx.fill();
+            } else if (this.type === 'ring') {
+                ctx.globalCompositeOperation = 'lighter';
+                let progress = 1 - (this.life / this.maxLife); // 0 to 1
+                let currentScale = this.size * progress;
+                ctx.beginPath();
+                // Vertical ellipse representing a water ring propagating forward
+                ctx.ellipse(0, 0, currentScale * 0.4, currentScale, 0, 0, Math.PI * 2);
+                ctx.lineWidth = Math.max(0.5, 6 * (this.life / this.maxLife));
+                ctx.strokeStyle = this.color;
+                ctx.stroke();
             }
         }
 
@@ -231,16 +314,27 @@ class ParticleSystem {
                 }
                 break;
             case 'fireblast':
-                count = 20;
+                // 1. The giant "大" character in the center 
+                let pDai = new Particle(x, y - 40, 0, 0, 40, '#ffb703', 35, null, 'daimonji');
+                pDai.spin = 0; // lock rotation
+                this.particles.push(pDai);
+
+                // 2. Huge fire explosion particles bursting from the bottom
+                count = 45;
                 for(let i=0; i<count; i++) {
-                    let speed = Math.random() * 10 + 3;
+                    let speed = Math.random() * 10 + 2;
                     let angle = (Math.random() - 0.5) * Math.PI - Math.PI/2;
+                    // Spread particles widely around the "大" base
+                    let pX = x + (Math.random() - 0.5) * 140;
+                    let pY = y + (Math.random() - 0.5) * 60;
+                    
                     let dx = Math.cos(angle) * speed;
-                    let dy = Math.sin(angle) * speed - 1;
-                    let life = Math.floor(Math.random() * 30) + 15;
-                    let size = Math.random() * 10 + 5;
-                    let color = Math.random() > 0.3 ? '#e63946' : (Math.random() > 0.5 ? '#ffb703' : '#fff');
-                    this.particles.push(new Particle(x + (Math.random()*40-20), y + (Math.random()*40-20), dx, dy, life, color, size, null, 'rect'));
+                    // Fire floats up
+                    let dy = Math.sin(angle) * speed - 2; 
+                    let life = Math.floor(Math.random() * 25) + 15;
+                    let size = Math.random() * 15 + 8; // Large flame chunks
+                    let color = Math.random() > 0.4 ? '#e63946' : (Math.random() > 0.6 ? '#ffb703' : '#fff');
+                    this.particles.push(new Particle(pX, pY, dx, dy, life, color, size, null, 'circle'));
                 }
                 break;
             case 'quickattack':
@@ -272,16 +366,38 @@ class ParticleSystem {
                 }
                 break;
             case 'hydropump':
+                let hBeamY = sourceY - 40;
+                let hStartOff = dirX * 30; // offset slightly in front of the mouth
+                let pBeam = new Particle(sourceX + hStartOff, hBeamY, dirX, 0, 25, '#4cc9f0', 25, null, 'waterbeam');
+                pBeam.angle = 0; 
+                pBeam.spin = 0;
+                this.particles.push(pBeam);
+
+                // Add expanding rapid water rings around the origin
+                for(let i=0; i<6; i++) {
+                    let rLife = 10 + i * 3;
+                    let rX = sourceX + hStartOff + dirX * (Math.random() * 50);
+                    let r = new Particle(rX, hBeamY, dirX * 15, 0, rLife, '#e0fbfc', Math.random()*40 + 60, null, 'ring');
+                    r.angle = 0; 
+                    r.spin = 0;
+                    this.particles.push(r);
+                }
+
+                // Rapidly flying water droplets/sparks along the beam
                 count = 30;
                 for(let i=0; i<count; i++) {
-                    let speed = Math.random() * 12 + 4;
-                    let angle = (Math.random() - 0.5) * Math.PI/1.5 + (dirX > 0 ? 0 : Math.PI);
+                    let speed = Math.random() * 25 + 15;
+                    // Flying generally super fast forward
+                    let angle = (dirX > 0 ? 0 : Math.PI) + (Math.random() - 0.5) * 0.3;
                     let dx = Math.cos(angle) * speed;
-                    let dy = Math.sin(angle) * speed - 2;
-                    let life = Math.floor(Math.random() * 30) + 10;
-                    let size = Math.random() * 8 + 4;
-                    let color = Math.random() > 0.2 ? '#4cc9f0' : '#0077b6';
-                    this.particles.push(new Particle(x, y, dx, dy, life, color, size, null, 'circle'));
+                    let dy = Math.sin(angle) * speed;
+                    let life = Math.floor(Math.random() * 15) + 10;
+                    let size = Math.random() * 4 + 2;
+                    let color = Math.random() > 0.4 ? '#4cc9f0' : '#ffffff';
+                    let pd = new Particle(sourceX + hStartOff + (Math.random() * 80 * dirX), hBeamY + (Math.random()-0.5)*40, dx, dy, life, color, size, null, 'line');
+                    pd.angle = angle; 
+                    pd.spin = 0;
+                    this.particles.push(pd);
                 }
                 break;
             case 'solarbeam':
@@ -364,15 +480,15 @@ class ParticleSystem {
     }
 
     update() {
-        let active = [];
+        let pCount = 0;
         for(let i = 0; i < this.particles.length; i++) {
             let p = this.particles[i];
             p.update();
             if(p.life > 0) {
-                active.push(p);
+                this.particles[pCount++] = p;
             }
         }
-        this.particles = active;
+        this.particles.length = pCount;
     }
 
     draw(ctx) {

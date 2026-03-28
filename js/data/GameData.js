@@ -151,7 +151,15 @@ const GameData = {
     },
 
     async generateRandomFighterAPI(bonusMultiplier = 0) {
-        let randId = Math.floor(Math.random() * 898) + 1; // Gen 1-8
+        let randId;
+        // 雷系（でんきタイプ）が出現する確率を約20%に増やす
+        if (Math.random() < 0.2) {
+            // 人気のでんきタイプポケモンの全国図鑑番号リスト
+            const electricIds = [25, 26, 81, 82, 100, 101, 125, 135, 145, 172, 179, 180, 181, 239, 243, 309, 310, 311, 312, 403, 404, 405, 417, 462, 466, 479, 522, 523, 587, 595, 596, 602, 603, 604, 644, 702, 737, 738, 777, 785, 848, 849, 877, 894];
+            randId = electricIds[Math.floor(Math.random() * electricIds.length)];
+        } else {
+            randId = Math.floor(Math.random() * 898) + 1; // Gen 1-8
+        }
         return await this.buildFighterInstance(randId, null, bonusMultiplier);
     }
 };

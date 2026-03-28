@@ -7,6 +7,12 @@ class Sprite {
         this.frameHeight = frameHeight;
         this.domElement = null;
         
+        // Caches for DOM interactions to prevent layout thrashing
+        this._lastW = '';
+        this._lastH = '';
+        this._lastTransform = '';
+        this._lastFilter = '';
+        
         // Define animations: { row: yIndex, frames: count, speed: ticksPerFrame }
         this.animations = {
             'idle': { row: 0, frames: 4, speed: 10 },
@@ -35,6 +41,7 @@ class Sprite {
         if (element) {
             this.domElement.src = srcUrl;
             this.domElement.style.display = 'block';
+            this.domElement.style.transformOrigin = 'center center'; // Set once
         }
     }
 
@@ -110,7 +117,12 @@ class Sprite {
             if (this.currentAnim === 'idle') dy = -25 * curve;
             else if (this.currentAnim === 'attack') dx = (this.tickCount < 10) ? 15 : 0;
             else if (this.currentAnim === 'hit') { dx = -10; ctx.globalCompositeOperation = 'lighter'; }
-            else if (this.currentAnim === 'faint') { rot = Math.PI / 2; ctx.globalAlpha = 0.5; }
+            else if (this.currentAnim === 'faint') { 
+                // 仰向けに倒れるように後ろへ回転し、地面(下方向)へ沈ませる
+                rot = -Math.PI / 4; // 左に45度回転
+                dy = (fh * (this.scale * 1.2)) / 4; // 若干沈み込むように
+                ctx.globalAlpha = 0.5; 
+            }
             
             ctx.rotate(rot);
             let drawScale = this.scale * 1.2; // 試合中一律1.2倍拡大
@@ -119,8 +131,10 @@ class Sprite {
                 let fWidth = fw * drawScale;
                 let fHeight = fh * drawScale;
                 
-                this.domElement.style.width = fWidth + 'px';
-                this.domElement.style.height = fHeight + 'px';
+                let newW = fWidth + 'px';
+                let newH = fHeight + 'px';
+                if (this._lastW !== newW) { this.domElement.style.width = newW; this._lastW = newW; }
+                if (this._lastH !== newH) { this.domElement.style.height = newH; this._lastH = newH; }
                 
                 // Position centered
                 let px = this.x - fWidth/2 + dx;
@@ -129,15 +143,24 @@ class Sprite {
                 let scaleStr = this.flipX ? 'scaleX(-1)' : 'scaleX(1)';
                 let rotateStr = rot ? `rotate(${rot}rad)` : '';
                 
-                this.domElement.style.transform = `translate(${px}px, ${py}px) ${scaleStr} ${rotateStr}`;
-                this.domElement.style.transformOrigin = 'center center';
+                let newTransform = `translate(${px}px, ${py}px) ${scaleStr} ${rotateStr}`;
+                if (this._lastTransform !== newTransform) {
+                    this.domElement.style.transform = newTransform;
+                    this._lastTransform = newTransform;
+                }
                 
+                let newFilter = '';
                 if (this.flashWhite) {
-                    this.domElement.style.filter = 'brightness(2) contrast(0) opacity(1)';
+                    newFilter = 'brightness(2) contrast(0) opacity(1)';
                 } else if (this.currentAnim === 'faint') {
-                    this.domElement.style.filter = 'drop-shadow(0 0 5px rgba(0,0,0,0.5)) opacity(0.5)';
+                    newFilter = 'drop-shadow(0 0 5px rgba(0,0,0,0.5)) opacity(0.5)';
                 } else {
-                    this.domElement.style.filter = 'drop-shadow(0 0 5px rgba(0,0,0,0.5)) opacity(' + this.alpha + ')';
+                    newFilter = `drop-shadow(0 0 5px rgba(0,0,0,0.5)) opacity(${this.alpha})`;
+                }
+
+                if (this._lastFilter !== newFilter) {
+                    this.domElement.style.filter = newFilter;
+                    this._lastFilter = newFilter;
                 }
                 
                 ctx.restore();
