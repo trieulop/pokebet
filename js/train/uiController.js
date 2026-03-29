@@ -291,6 +291,7 @@ class TrainUIController {
                 this.isTransitioning = true;
                 // --- New: Visual Evolution Sequence ---
                 this.els.resSprite.classList.add('evolving');
+                AudioSystem.playEvolutionEffect(2.0);
                 
                 // Wait for 2s while it "pulses"
                 setTimeout(() => {
@@ -306,6 +307,7 @@ class TrainUIController {
                     
                     // Pop effect!
                     this.els.resSprite.classList.add('evolved-pop');
+                    AudioSystem.playEvolutionSuccess();
                     setTimeout(() => {
                         this.els.resSprite.classList.remove('evolved-pop');
                         

@@ -197,8 +197,10 @@ class BattleEngine {
 
     async executeTurn(attacker, defender, attackerSide, defenderSide) {
         this.turnCount++;
-        let damageMult = 1.0 + (this.turnCount * BattleEngine.CONFIG.TURN_DAMAGE_SCALE_RATE); // Damage increases each turn
-        let healMult = Math.max(BattleEngine.CONFIG.HEAL_MIN_MULT, 1.0 - (this.turnCount * BattleEngine.CONFIG.TURN_HEAL_DECAY_RATE)); // Healing decreases
+        // A "turn" consists of 2 actions. We scale by turn (round) instead of individual action count.
+        const roundCount = Math.floor((this.turnCount - 1) / 2);
+        let damageMult = 1.0 + (roundCount * BattleEngine.CONFIG.TURN_DAMAGE_SCALE_RATE); // Damage increases each turn
+        let healMult = Math.max(BattleEngine.CONFIG.HEAL_MIN_MULT, 1.0 - (roundCount * BattleEngine.CONFIG.TURN_HEAL_DECAY_RATE)); // Healing decreases
         
         // Tick cooldowns
         attacker.skills.forEach(s => s.tickCooldown());
@@ -257,7 +259,7 @@ class BattleEngine {
         await this.wait(400); // Wait for hit frame roughly
 
         if(skill.type === 'heal') {
-            let baseHeal = Math.max(5, Math.floor(40 * healMult));
+            let baseHeal = Math.max(15, Math.floor(40 * healMult));
             let amount = attacker.heal(baseHeal);
             this.onHpChange(attackerSide, attacker.hp, attacker.maxHp);
             this.particleSystem.addFloatingText(attackerSprite.x, attackerSprite.y - 100, `+${amount}`, '#06d6a0', 30);

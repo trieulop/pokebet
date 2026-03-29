@@ -191,4 +191,55 @@ class AudioSystem {
             window.speechSynthesis.speak(u);
         }, 50);
     }
+
+    static playEvolutionEffect(duration) {
+        this.init();
+        if(this.ctx.state === 'suspended') this.ctx.resume();
+        
+        let now = this.ctx.currentTime;
+        // --- Based on Pattern ⑨: Chaos Layer ---
+        const count = 5;
+        for(let i=0; i < count; i++) {
+            let osc = this.ctx.createOscillator();
+            let gain = this.ctx.createGain();
+            osc.type = i % 2 === 0 ? 'sawtooth' : 'square';
+            osc.frequency.setValueAtTime(100 + i*100, now);
+            osc.frequency.exponentialRampToValueAtTime(Math.random()*1000 + 200, now + duration);
+            
+            osc.connect(gain); 
+            gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.02, now + duration/2);
+            gain.gain.linearRampToValueAtTime(0, now + duration);
+            
+            osc.start(now); 
+            osc.stop(now + duration);
+        }
+    }
+
+    static playEvolutionSuccess() {
+        this.init();
+        if(this.ctx.state === 'suspended') this.ctx.resume();
+        
+        let now = this.ctx.currentTime;
+        // --- Based on Pattern ⑨ Fanfare: Ominous Layered Cluster ---
+        let notes = [100.00, 200.00, 300.00, 400.00, 500.00]; 
+        let length = 1.5;
+        notes.forEach((freq, i) => {
+            let osc = this.ctx.createOscillator();
+            let gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, now);
+            
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.06, now + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + length);
+            
+            osc.start(now);
+            osc.stop(now + length + 0.1);
+        });
+    }
 }

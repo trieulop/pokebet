@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Evolution Sound Preview - 10 Patterns</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f1b; color: #eee; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: #e63946; text-shadow: 0 0 10px rgba(230, 57, 70, 0.5); margin-bottom: 20px; }
+        .container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 900px; width: 100%; }
+        .card { background: #1a1a2e; border: 1px solid #333; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; }
+        .card:hover { transform: translateY(-5px); border-color: #e63946; }
+        .card h3 { margin-top: 0; color: #4cc9f0; font-size: 18px; }
+        .card p { font-size: 13px; color: #aaa; flex-grow: 1; margin-bottom: 15px; line-height: 1.5; }
+        button { padding: 12px; font-size: 15px; cursor: pointer; background: #e63946; color: white; border: none; border-radius: 6px; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: #d62828; }
+        .stop-btn { background: #666; margin-top: 20px; padding: 10px 30px; }
+    </style>
+</head>
+<body>
+    <h1>進化音「少し怖い」10パターン</h1>
+    <p style="text-align:center; max-width:700px; margin-bottom:40px;">
+        Web Audio APIのみで作成した、進化的かつ不気味なサウンドバリエーションです。<br>
+        各ボタンを押すと、約2秒の上昇音（進化中）＋ 完了ファンファーレ（進化後）が流れます。
+    </p>
+
+    <div class="container">
+        <!-- 1. 不協和音 -->
+        <div class="card">
+            <h3>① 不協和音のうなり</h3>
+            <p>わずかにずれた2つの波形（鋸歯状波）が干渉し、強いうなりを生みます。最もベーシックで嫌な感じがする音です。</p>
+            <button onclick="play(1)">パターン① 再生</button>
+        </div>
+
+        <!-- 2. デジタル・グリッチ -->
+        <div class="card">
+            <h3>② デジタル・グリッチ</h3>
+            <p>ピッチがランダムに飛び、ノイズが混ざる音。データが破損していくような怖さがあります。</p>
+            <button onclick="play(2)">パターン② 再生</button>
+        </div>
+
+        <!-- 3. 深淵の重低音 -->
+        <div class="card">
+            <h3>③ 深淵の重低音</h3>
+            <p>地響きのような低音の上に、鋭い高音が混ざります。強大な敵が現れるような圧倒的なプレッシャー。</p>
+            <button onclick="play(3)">パターン③ 再生</button>
+        </div>
+
+        <!-- 4. 三全音テンション -->
+        <div class="card">
+            <h3>④ 三全音（Devil's Interval）</h3>
+            <p>不協和音の代名詞「トライトーン」をメインに使用。解決しない不安感が常に続きます。</p>
+            <button onclick="play(4)">パターン④ 再生</button>
+        </div>
+
+        <!-- 5. ポルターガイスト -->
+        <div class="card">
+            <h3>⑤ 不安定なポルターガイスト</h3>
+            <p>不安定なビブラートと不気味な揺らぎ。幽霊が近くにいるような、精神的な不気味さを追求しました。</p>
+            <button onclick="play(5)">パターン⑤ 再生</button>
+        </div>
+
+        <!-- 6. インダストリアル -->
+        <div class="card">
+            <h3>⑥ 荒いインダストリアル</h3>
+            <p>金属をこすり合わせたような、耳につくザラザラした質感の音影。機械的で冷たい怖さです。</p>
+            <button onclick="play(6)">パターン⑥ 再生</button>
+        </div>
+
+        <!-- 7. 加速する心拍 -->
+        <div class="card">
+            <h3>⑦ 加速する心拍</h3>
+            <p>段々と速くなるパルス音。時間がなくなっていくような焦燥感と、背後から迫られる緊張感。</p>
+            <button onclick="play(7)">パターン⑦ 再生</button>
+        </div>
+
+        <!-- 8. 奈落への落下 -->
+        <div class="card">
+            <h3>⑧ 奈落への落下</h3>
+            <p>上昇していくと見せかけて、進化した瞬間に奈落へ突き落とされるような恐怖の下降ファンファーレ。</p>
+            <button onclick="play(8)">パターン⑧ 再生</button>
+        </div>
+
+        <!-- 9. カオス・オーケストラ -->
+        <div class="card">
+            <h3>⑨ カオス・レイヤー</h3>
+            <p>複数の不規則な波形が重なり、最終的に巨大な不協和音の塊となって爆発します。</p>
+            <button onclick="play(9)">パターン⑨ 再生</button>
+        </div>
+
+        <!-- 10. 高周波パルス -->
+        <div class="card">
+            <h3>⑩ 高周波パルス共鳴</h3>
+            <p>耳に刺さるような高いレゾナンス音。不快指数の高い、神経を逆なでするような音色です。</p>
+            <button onclick="play(10)">パターン⑩ 再生</button>
+        </div>
+    </div>
+
+    <button class="stop-btn" onclick="stopAll()">すべての音を停止</button>
+
+    <script>
+        let audioCtx = null;
+        let oscillators = [];
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function stopAll() {
+            oscillators.forEach(o => { try{o.stop();}catch(e){} });
+            oscillators = [];
+        }
+
+        async function play(pattern) {
+            initAudio();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            stopAll();
+
+            const duration = 2.0;
+            const now = audioCtx.currentTime;
+
+            switch(pattern) {
+                case 1: playDissonantSwell(now, duration); break;
+                case 2: playGlitch(now, duration); break;
+                case 3: playAbyssSub(now, duration); break;
+                case 4: playTritoneTension(now, duration); break;
+                case 5: playPoltergeist(now, duration); break;
+                case 6: playIndustrial(now, duration); break;
+                case 7: playHeartbeat(now, duration); break;
+                case 8: playAbyssFall(now, duration); break;
+                case 9: playChaosLayer(now, duration); break;
+                case 10: playHighPulse(now, duration); break;
+            }
+        }
+
+        // --- Helper: Register Oscillator for stopping ---
+        function reg(osc) { oscillators.push(osc); return osc; }
+
+        // --- Pattern Implementations ---
+
+        function playDissonantSwell(now, duration) {
+            const steps = duration / 0.1;
+            for (let i = 0; i < steps; i++) {
+                let t = now + i * 0.1;
+                [0, 6].forEach(detune => {
+                    let osc = reg(audioCtx.createOscillator());
+                    let gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100 + (800 * Math.pow(i/steps, 2)) + detune, t);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    gain.gain.setValueAtTime(0.04, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+                    osc.start(t); osc.stop(t + 0.1);
+                });
+            }
+            // Fanfare: Dissonant cluster
+            playFanfare(now + duration, [261, 311, 370, 440], 'sawtooth');
+        }
+
+        function playGlitch(now, duration) {
+            const steps = duration / 0.05;
+            for (let i = 0; i < steps; i++) {
+                let t = now + i * 0.05;
+                if (Math.random() > 0.3) {
+                    let osc = reg(audioCtx.createOscillator());
+                    let gain = audioCtx.createGain();
+                    osc.type = Math.random() > 0.5 ? 'square' : 'sawtooth';
+                    osc.frequency.setValueAtTime(200 + (Math.random() * 1000) * (i/steps), t);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    gain.gain.setValueAtTime(0.03, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.04);
+                    osc.start(t); osc.stop(t + 0.05);
+                }
+            }
+            playFanfare(now + duration, [100, 1500, 200, 1200], 'square', 0.8);
+        }
+
+        function playAbyssSub(now, duration) {
+            let sub = reg(audioCtx.createOscillator());
+            let subGain = audioCtx.createGain();
+            sub.type = 'sine';
+            sub.frequency.setValueAtTime(40, now);
+            sub.frequency.linearRampToValueAtTime(80, now + duration);
+            sub.connect(subGain); subGain.connect(audioCtx.destination);
+            subGain.gain.setValueAtTime(0, now);
+            subGain.gain.linearRampToValueAtTime(0.15, now + 0.5);
+            subGain.gain.linearRampToValueAtTime(0, now + duration);
+            sub.start(now); sub.stop(now + duration);
+
+            let high = reg(audioCtx.createOscillator());
+            high.type = 'sawtooth';
+            high.frequency.setValueAtTime(2000, now);
+            high.frequency.exponentialRampToValueAtTime(300, now + duration);
+            let hGain = audioCtx.createGain();
+            high.connect(hGain); hGain.connect(audioCtx.destination);
+            hGain.gain.setValueAtTime(0.02, now);
+            hGain.gain.linearRampToValueAtTime(0, now + duration);
+            high.start(now); high.stop(now + duration);
+
+            playFanfare(now + duration, [50, 60, 440, 450], 'sawtooth', 1.5, true);
+        }
+
+        function playTritoneTension(now, duration) {
+            const steps = duration / 0.1;
+            for (let i = 0; i < steps; i++) {
+                let t = now + i * 0.1;
+                [200, 282.84].forEach(base => { // Tritone relationship 1 : sqrt(2)
+                    let osc = reg(audioCtx.createOscillator());
+                    let gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(base * (1 + i/steps), t);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    gain.gain.setValueAtTime(0.05, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                    osc.start(t); osc.stop(t + 0.1);
+                });
+            }
+            playFanfare(now + duration, [311, 440, 622, 880], 'square', 1.2);
+        }
+
+        function playPoltergeist(now, duration) {
+            let osc = reg(audioCtx.createOscillator());
+            let lfo = reg(audioCtx.createOscillator());
+            let lfoGain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + duration);
+            lfo.frequency.value = 10;
+            lfoGain.gain.value = 50;
+            lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
+            let g = audioCtx.createGain();
+            osc.connect(g); g.connect(audioCtx.destination);
+            g.gain.setValueAtTime(0, now);
+            g.gain.linearRampToValueAtTime(0.1, now + 0.5);
+            g.gain.linearRampToValueAtTime(0, now + duration);
+            lfo.start(now); osc.start(now);
+            lfo.stop(now + duration); osc.stop(now + duration);
+            playFanfare(now + duration, [400, 410, 420], 'sine', 2.0, true);
+        }
+
+        function playIndustrial(now, duration) {
+            const steps = duration / 0.15;
+            for (let i = 0; i < steps; i++) {
+                let t = now + i * 0.15;
+                let osc = reg(audioCtx.createOscillator());
+                let gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100 + (i*50), t);
+                let f = audioCtx.createBiquadFilter();
+                f.type = 'peaking'; f.frequency.value = 1000; f.Q.value = 10; f.gain.value = 20;
+                osc.connect(f); f.connect(gain); gain.connect(audioCtx.destination);
+                gain.gain.setValueAtTime(0.06, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.15);
+                osc.start(t); osc.stop(t + 0.15);
+            }
+            playFanfare(now + duration, [100, 110, 120, 130], 'square', 1.0);
+        }
+
+        function playHeartbeat(now, duration) {
+            const beats = 8;
+            for(let i=0; i<beats; i++) {
+                let t = now + (duration * (1 - Math.pow(0.8, i)));
+                let osc = reg(audioCtx.createOscillator());
+                let g = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(60, t);
+                osc.frequency.exponentialRampToValueAtTime(20, t + 0.1);
+                osc.connect(g); g.connect(audioCtx.destination);
+                g.gain.setValueAtTime(0.3, t);
+                g.gain.linearRampToValueAtTime(0, t + 0.1);
+                osc.start(t); osc.stop(t + 0.1);
+            }
+            playFanfare(now + duration, [220, 233, 246], 'sawtooth', 1.5, true);
+        }
+
+        function playAbyssFall(now, duration) {
+            let osc = reg(audioCtx.createOscillator());
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, now);
+            osc.frequency.exponentialRampToValueAtTime(1000, now + duration);
+            let g = audioCtx.createGain();
+            osc.connect(g); g.connect(audioCtx.destination);
+            g.gain.setValueAtTime(0.05, now);
+            g.gain.linearRampToValueAtTime(0, now + duration);
+            osc.start(now); osc.stop(now + duration);
+            // Fall
+            playFanfare(now + duration, [100, 80, 60, 40], 'sawtooth', 2.0);
+        }
+
+        function playChaosLayer(now, duration) {
+            const count = 5;
+            for(let i=0; i<count; i++) {
+                let osc = reg(audioCtx.createOscillator());
+                osc.type = i % 2 === 0 ? 'sawtooth' : 'square';
+                osc.frequency.setValueAtTime(100 + i*100, now);
+                osc.frequency.exponentialRampToValueAtTime(Math.random()*1000 + 200, now + duration);
+                let g = audioCtx.createGain();
+                osc.connect(g); g.connect(audioCtx.destination);
+                g.gain.setValueAtTime(0, now);
+                g.gain.linearRampToValueAtTime(0.02, now + duration/2);
+                g.gain.linearRampToValueAtTime(0, now + duration);
+                osc.start(now); osc.stop(now + duration);
+            }
+            playFanfare(now + duration, [100, 200, 300, 400, 500], 'sawtooth', 1.5);
+        }
+
+        function playHighPulse(now, duration) {
+            const steps = duration / 0.05;
+            for(let i=0; i<steps; i++) {
+                let t = now + i * 0.05;
+                let osc = reg(audioCtx.createOscillator());
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(3000 + i*50, t);
+                let sub = reg(audioCtx.createOscillator());
+                sub.type = 'square';
+                sub.frequency.setValueAtTime(50, t);
+                let g = audioCtx.createGain();
+                osc.connect(g); sub.connect(g); g.connect(audioCtx.destination);
+                g.gain.setValueAtTime(0.02, t);
+                g.gain.linearRampToValueAtTime(0, t + 0.05);
+                osc.start(t); sub.start(t);
+                osc.stop(t+0.05); sub.stop(t+0.05);
+            }
+            playFanfare(now + duration, [4000, 4100, 50, 60], 'square', 1.0);
+        }
+
+        function playFanfare(time, notes, type, length = 1.2, vibrate = false) {
+            notes.forEach((freq, i) => {
+                let osc = reg(audioCtx.createOscillator());
+                let gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, time);
+                
+                if(vibrate) {
+                    let lfo = reg(audioCtx.createOscillator());
+                    let lg = audioCtx.createGain();
+                    lfo.frequency.value = 15;
+                    lg.gain.value = 10;
+                    lfo.connect(lg); lg.connect(osc.frequency);
+                    lfo.start(time); lfo.stop(time + length);
+                }
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.06, time + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + length);
+                osc.start(time);
+                osc.stop(time + length + 0.1);
+            });
+        }
+    </script>
+</body>
+</html>

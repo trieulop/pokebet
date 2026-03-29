@@ -145,6 +145,7 @@ class UIManager {
 
                 // Play evolving animation
                 spriteImg.classList.add('evolving');
+                AudioSystem.playEvolutionEffect(2.5);
 
                 // Enforce minimum animation time and fetch concurrently
                 let minWait = new Promise(r => setTimeout(r, 2500));
@@ -205,6 +206,7 @@ class UIManager {
                 }
 
                 spriteImg.classList.add('evolved-pop');
+                AudioSystem.playEvolutionSuccess();
                 
                 setTimeout(() => {
                     spriteImg.classList.remove('evolved-pop');
