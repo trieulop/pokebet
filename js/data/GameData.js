@@ -45,7 +45,7 @@ const GameData = {
         let rarity = this.getRandomRarity();
         let availableSkills = this.skills.filter(s => s.id !== 'tackle');
         availableSkills.sort(() => Math.random() - 0.5);
-        let chosenIds = ['tackle', availableSkills[0].id, availableSkills[1].id];
+        let chosenIds = ['tackle', availableSkills[0].id, availableSkills[1].id, availableSkills[2].id];
         p.setSkills(chosenIds);
         p.setup(rarity, bonusMultiplier);
         return p;
@@ -162,7 +162,7 @@ const GameData = {
         pokemon.setSkills(chosenIds.slice(0, count + 1));
     },
 
-    async buildFighterInstance(idOrName, forcedRarity = null, bonusMultiplier = 0, skillCount = 2) {
+    async buildFighterInstance(idOrName, forcedRarity = null, bonusMultiplier = 0, skillCount = 3) {
         let fd = await this.fetchFighterData(idOrName);
         let p = new Pokemon(fd.id, fd.name, fd.hp, fd.atk, fd.def, fd.spd, fd.spriteKey, fd.types);
         p.uiSpriteUrl = fd.uiSpriteUrl;
@@ -176,7 +176,7 @@ const GameData = {
     },
 
     async generateSpecificFighterAPI(id, forceLegendary = false) {
-        return await this.buildFighterInstance(id, forceLegendary ? 'legendary' : null, 0.5, 2);
+        return await this.buildFighterInstance(id, forceLegendary ? 'legendary' : null, 0.5, 3);
     },
 
     async generateRandomFighterAPI(bonusMultiplier = 0) {
@@ -187,6 +187,6 @@ const GameData = {
         } else {
             randId = Math.floor(Math.random() * 898) + 1;
         }
-        return await this.buildFighterInstance(randId, null, bonusMultiplier, 2);
+        return await this.buildFighterInstance(randId, null, bonusMultiplier, 3);
     }
 };

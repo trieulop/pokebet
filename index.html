@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="data:,">
     <title>Pokémon PvP Bet</title>
     <link rel="stylesheet" href="css/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 </head>
 <body>
     <div id="game-container">
@@ -35,10 +38,93 @@
                         <span class="game-number">②</span>
                         <div class="game-text"><span>Poke</span><br><span>Train</span></div>
                     </button>
+                    <button id="btn-select-pokesolo" class="btn btn-game-select" style="background: #2a9d8f;">
+                        <span class="game-number">③</span>
+                        <div class="game-text"><span>Poke</span><br><span>Solo</span></div>
+                    </button>
                 </div>
             </div>
 
             <!-- Top bar: Points & Menu -->
+            <!-- PokeSolo name input -->
+            <div id="pokesolo-name-screen" class="screen">
+                <div id="pokesolo-name-ball-bg"></div>
+                <div class="solo-box">
+                    <h2>トレーナー名を登録</h2>
+                    <input type="text" id="pokesolo-input-name" placeholder="なまえを入力..." maxlength="10">
+                    <button id="pokesolo-btn-start-match" class="btn btn-primary" style="margin-top:20px;">対戦相手を探す</button>
+                    <button class="btn btn-secondary btn-back-menu" style="margin-top:10px;">もどる</button>
+                </div>
+            </div>
+
+            <!-- PokeSolo matching -->
+            <div id="pokesolo-matching-screen" class="screen">
+                <div class="solo-box">
+                    <div class="matching-loader"></div>
+                    <h2 id="pokesolo-match-status">対戦相手をさがしています...</h2>
+                    <div id="pokesolo-match-timer">00:00</div>
+                    <button id="pokesolo-btn-cancel-match" class="btn btn-secondary">キャンセル</button>
+                </div>
+            </div>
+
+            <!-- PokeSolo selection -->
+            <div id="pokesolo-selection-screen" class="screen">
+                <div class="selection-header">
+                    <h2>ポケモンを選出せよ！</h2>
+                    <div id="selection-timer">30</div>
+                </div>
+                <div id="pokesolo-pokemon-list" class="pokemon-card-container">
+                    <!-- Cards injected here -->
+                </div>
+                <p class="selection-hint">制限時間を過ぎると切断されます!</p>
+            </div>
+
+            <!-- PokeSolo result -->
+            <div id="pokesolo-result-screen" class="screen">
+                <div class="result-box">
+                    <h1 id="pokesolo-result-title">Victory!</h1>
+                    <div id="pokesolo-result-winner-sprite">
+                        <img id="pokesolo-winner-img" src="" alt="Winner">
+                    </div>
+                    <p id="pokesolo-result-msg"></p>
+                    <div class="result-actions">
+                        <button id="pokesolo-btn-retry" class="btn btn-primary">再挑戦</button>
+                        <button id="pokesolo-btn-newgame" class="btn btn-secondary">NEW GAME</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PokeSolo battle UI -->
+            <div id="pokesolo-battle-ui" class="screen">
+                <div class="hp-bar-container left">
+                    <div class="card-info">
+                        <span id="pokesolo-name-left" class="name">???</span> 
+                        <span id="pokesolo-hp-text-left" class="hp-txt">100/100</span>
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill" id="pokesolo-hp-fill-left"></div></div>
+                </div>
+                <div class="hp-bar-container right">
+                    <div class="card-info">
+                        <span id="pokesolo-hp-text-right" class="hp-txt">100/100</span>
+                        <span id="pokesolo-name-right" class="name">???</span> 
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill" id="pokesolo-hp-fill-right"></div></div>
+                </div>
+                <div id="pokesolo-bottom-panel">
+                    <div id="pokesolo-battle-message-box">
+                        <p id="pokesolo-battle-message">バトル開始！</p>
+                    </div>
+                    <div id="pokesolo-stamina-row">
+                        <span class="stamina-label">SP</span>
+                        <div class="stamina-bar-bg">
+                            <div id="pokesolo-stamina-fill" class="stamina-bar-fill"></div>
+                        </div>
+                        <span id="pokesolo-stamina-text">0/100</span>
+                    </div>
+                    <div id="pokesolo-skill-container"></div>
+                </div>
+            </div>
+
             <div id="top-bar" class="hidden">
                 <div class="points-display">ポイント: <span id="player-points">1000</span></div>
                 <button id="btn-global-upgrade" class="btn btn-global-upgrade">
@@ -216,6 +302,10 @@
     <script src="js/train/evolutionService.js"></script>
     <script src="js/train/battleController.js"></script>
     <script src="js/train/uiController.js"></script>
+    
+    <!-- PokeSolo Logic -->
+    <script src="js/solo/SocketService.js"></script>
+    <script src="js/solo/SoloManager.js"></script>
     
     <script src="js/main.js"></script>
 </body>

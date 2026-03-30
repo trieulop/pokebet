@@ -6,10 +6,12 @@ window.addEventListener('load', async () => {
     const battleEngine = new BattleEngine('gameCanvas');
     const uiManager = new UIManager(battleEngine);
     const trainController = new TrainUIController(battleEngine);
+    const soloManager = new SoloManager(battleEngine);
 
     // Game Selection Menu Initialization
     const btnPokeBet = document.getElementById('btn-select-pokebet');
     const btnPokeTrain = document.getElementById('btn-select-poketrain');
+    const btnPokeSolo = document.getElementById('btn-select-pokesolo');
     const selectionScreen = document.getElementById('game-selection-screen');
     const bettingScreen = document.getElementById('betting-screen');
     const topBar = document.getElementById('top-bar');
@@ -17,12 +19,20 @@ window.addEventListener('load', async () => {
     btnPokeBet.addEventListener('click', async () => {
         UIUtils.showScreen('betting-screen');
         topBar.classList.remove('hidden');
+        battleEngine.forceBackground = null; // Ensure no leftover backgrounds
         await uiManager.generateMatchup();
     });
 
     btnPokeTrain.addEventListener('click', () => {
         UIUtils.showScreen(null); // Just hide all first
+        battleEngine.battleMode = 'auto'; 
+        battleEngine.forceBackground = null; // CLEAR SOCCER BACKGROUND
         trainController.boot();
+    });
+
+    btnPokeSolo.addEventListener('click', () => {
+        battleEngine.battleMode = 'manual'; 
+        soloManager.boot();
     });
 
     // Responsive full screen resizing
@@ -45,8 +55,7 @@ window.addEventListener('load', async () => {
         battleEngine.canvasWidth = canvas.width;
         battleEngine.canvasHeight = canvas.height;
         
-        // Regenerate background to match browser size exactly
-        AssetGenerator.sprites['bg_arena'] = AssetGenerator.createGameBackground(canvas.width, canvas.height);
+        // Removed procedural background regeneration to prevent overriding custom assets
     }
     window.addEventListener('resize', resizeGame);
     resizeGame();

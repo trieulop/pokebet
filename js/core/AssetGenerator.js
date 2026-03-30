@@ -10,8 +10,19 @@ class AssetGenerator {
         this.sprites['slime_red'] = this.createCreatureSprite('#e63946');
         this.sprites['slime_green'] = this.createCreatureSprite('#06d6a0');
         this.sprites['slime_gold'] = this.createCreatureSprite('#ffd700');
-        this.sprites['bg_arena'] = this.createGameBackground();
-        this.sprites['bg_train'] = this.createTrainBackground();
+        this.sprites['bg_arena'] = this.loadExternalImage('assets/bg_bet.png');
+        this.sprites['bg_train'] = this.loadExternalImage('assets/bg_train.png');
+        this.sprites['bg_soccer'] = this.loadExternalImage('assets/bg_soccer.png');
+    }
+
+    static loadExternalImage(path) {
+        const img = new Image();
+        // Add timestamp to bypass browser cache
+        const cacheBuster = `?t=${Date.now()}`;
+        img.src = path + cacheBuster;
+        img.onload = () => console.log("Soccer background loaded successfully:", path);
+        img.onerror = () => console.error("FAILED to load soccer background:", path);
+        return img;
     }
 
     // Creates an image returning 4 frames (idle), 4 frames (attack), 1 frame (hit), 1 frame (faint)

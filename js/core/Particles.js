@@ -36,7 +36,7 @@ class Particle {
     draw(ctx) {
         ctx.save();
         let alpha = this.life / this.maxLife;
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = Math.max(0, Math.min(1, alpha)); // Safety clamp
 
         if (this.text) {
             ctx.fillStyle = this.color;
@@ -52,18 +52,21 @@ class Particle {
             ctx.rotate(this.angle);
             ctx.fillStyle = this.color;
             ctx.strokeStyle = this.color;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = Math.max(1.5, this.size * 0.2); // Ensure visible lines
             
+            // Use source-over for better visibility on transparent canvas
+            ctx.globalCompositeOperation = 'source-over'; 
+
             if (this.type === 'circle') {
                 ctx.beginPath();
-                ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                ctx.arc(0, 0, this.size * 1.5, 0, Math.PI * 2); // Slightly larger
                 ctx.fill();
             } else if (this.type === 'rect') {
                 ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
             } else if (this.type === 'line') {
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
-                let len = this.size * 3;
+                let len = this.size * 4;
                 let vl = Math.sqrt(this.dx*this.dx + this.dy*this.dy);
                 if (vl > 0) {
                     ctx.lineTo((this.dx / vl) * len, (this.dy / vl) * len);
@@ -72,18 +75,15 @@ class Particle {
                 }
                 ctx.stroke();
             } else if (this.type === 'beam') {
-                ctx.globalCompositeOperation = 'lighter';
                 ctx.shadowColor = this.color;
                 ctx.shadowBlur = 10;
                 ctx.fillRect(-this.size, -this.size/2, this.size*2, this.size);
             } else if (this.type === 'cross') {
-                ctx.globalCompositeOperation = 'lighter';
                 ctx.fillRect(-this.size/2, -this.size/6, this.size, this.size/3);
                 ctx.fillRect(-this.size/6, -this.size/2, this.size/3, this.size);
             } else if (this.type === 'slash') {
-                ctx.globalCompositeOperation = 'lighter';
-                let width = this.size * 10;  // EXTRA Long width
-                let thickness = this.size * 0.2;  // Slightly thiner middle
+                let width = this.size * 12;  // EXTRA Long width
+                let thickness = this.size * 0.4; 
                 ctx.beginPath();
                 ctx.moveTo(-width/2, 0);
                 ctx.lineTo(0, -thickness/2);
@@ -92,8 +92,6 @@ class Particle {
                 ctx.closePath();
                 ctx.fill();
             } else if (this.type === 'lightning') {
-                ctx.globalCompositeOperation = 'lighter';
-                
                 // Outer glow
                 ctx.beginPath();
                 ctx.moveTo(0, -this.size * 12);
@@ -114,8 +112,6 @@ class Particle {
                 ctx.strokeStyle = '#fff';
                 ctx.stroke();
             } else if (this.type === 'thunderbolt') {
-                ctx.globalCompositeOperation = 'lighter';
-                
                 let length = this.size * 12; // Length outwards
                 
                 // Outer glow
@@ -138,7 +134,6 @@ class Particle {
                 ctx.strokeStyle = '#fff';
                 ctx.stroke();
             } else if (this.type === 'starburst') {
-                ctx.globalCompositeOperation = 'lighter';
                 // Draw a jagged star
                 ctx.beginPath();
                 let spikes = 8; // 8-point star
@@ -152,7 +147,6 @@ class Particle {
                 ctx.fillStyle = this.color;
                 ctx.fill();
             } else if (this.type === 'daimonji') {
-                ctx.globalCompositeOperation = 'lighter';
                 let s = this.size; // scale
                 
                 ctx.lineCap = 'round';
@@ -190,8 +184,6 @@ class Particle {
                 ctx.strokeStyle = '#fff';
                 ctx.stroke();
             } else if (this.type === 'megabeam') {
-                ctx.globalCompositeOperation = 'lighter';
-                
                 // this.dx decides direction. If dx > 0 (came from left), beam source is on the left (-length).
                 let dir = this.dx > 0 ? 1 : -1; 
                 // The particle is spawned precisely at attacker's X.
@@ -228,8 +220,6 @@ class Particle {
                 ctx.fillStyle = '#ffffff'; 
                 ctx.fill();
             } else if (this.type === 'waterbeam') {
-                ctx.globalCompositeOperation = 'lighter';
-                
                 let dir = this.dx > 0 ? 1 : -1; 
                 let startX = 0; 
                 let endX = 1500 * dir; 
@@ -262,7 +252,6 @@ class Particle {
                 ctx.fillStyle = '#e0fbfc'; 
                 ctx.fill();
             } else if (this.type === 'ring') {
-                ctx.globalCompositeOperation = 'lighter';
                 let progress = 1 - (this.life / this.maxLife); // 0 to 1
                 let currentScale = this.size * progress;
                 ctx.beginPath();
@@ -284,32 +273,106 @@ class ParticleSystem {
         this.auras = []; // Continuous particles linked to a target
     }
 
-    addHitEffect(x, y, color = '#ffd700', count = 10) {
+    addHitEffect(x, y, color = '#ffd700', count = 12) {
         for(let i=0; i<count; i++) {
-            let angle = Math.random() * Math.PI * 2;
-            let speed = Math.random() * 5 + 2;
-            let dx = Math.cos(angle) * speed;
-            let dy = Math.sin(angle) * speed;
+            let dx = (Math.random() - 0.5) * 8; 
+            let dy = (Math.random() - 0.5) * 8;
             let life = Math.floor(Math.random() * 20) + 10;
-            let size = Math.random() * 4 + 2;
+            let size = Math.random() * 4 + 2; 
             this.particles.push(new Particle(x, y, dx, dy, life, color, size, null, 'circle'));
         }
     }
 
-    addSkillEffect(skillId, x, y, side, sourceX = x, sourceY = y) {
+    addSkillEffect(skillId, x, y, side, sourceX = x, sourceY = y, skillName = '') {
+        // Defensive checks for invalid coordinates
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        if (!Number.isFinite(sourceX) || !Number.isFinite(sourceY)) {
+            sourceX = x;
+            sourceY = y;
+        }
+
+        // Normalization mapping for PokeAPI skill IDs to internal animation keys
+        const mapping = {
+            'だいもんじ': 'fireblast',
+            'fire-blast': 'fireblast',
+            'flamethrower': 'fireblast',
+            'fire-punch': 'fireblast',
+            'ember': 'fireblast',
+            'ハイドロポンプ': 'hydropump',
+            'hydro-pump': 'hydropump',
+            'water-gun': 'hydropump',
+            'bubble-beam': 'hydropump',
+            'surf': 'hydropump',
+            'ソーラービーム': 'solarbeam',
+            'solar-beam': 'solarbeam',
+            'razor-leaf': 'solarbeam',
+            'vine-whip': 'solarbeam',
+            'leaf-blade': 'solarbeam',
+            'でんこうせっか': 'quickattack',
+            'quick-attack': 'quickattack',
+            '10まんボルト': 'thunderbolt',
+            'かみなり': 'lightning',
+            'thunderbolt': 'thunderbolt',
+            'thunder': 'lightning',
+            'spark': 'quickattack',
+            'じこさいせい': 'heal',
+            'recover': 'heal',
+            'soft-boiled': 'heal',
+            'milk-drink': 'heal',
+            'まもる': 'shield',
+            'protect': 'shield',
+            'detect': 'shield',
+            'サイケこうせん': 'starburst',
+            'psybeam': 'starburst',
+            'confusion': 'starburst',
+            'psychic': 'starburst',
+            'dazzling-gleam': 'starburst',
+            'moonblast': 'starburst',
+            'たいあたり': 'tackle',
+            'はたく': 'tackle',
+            'ひっかく': 'tackle',
+            'tackle': 'tackle',
+            'pound': 'tackle',
+            'scratch': 'tackle',
+            'slam': 'tackle',
+            'cut': 'tackle'
+        };
+        
+        // Normalize: remove dashes, lower case, use mapping
+        const normalized = skillId?.toString().toLowerCase().replace(/-/g, '') || 'tackle';
+        let internalId = mapping[skillId] || mapping[normalized] || normalized;
+
+        // --- NAME-BASED FALLBACK (for PokeAPI diversity & Japanese names) ---
+        if (!mapping[internalId]) {
+            const lowName = (skillName || '').toLowerCase();
+            if (lowName.includes('fire') || lowName.includes('火') || lowName.includes('焔') || lowName.includes('炎')) internalId = 'fireblast';
+            else if (lowName.includes('water') || lowName.includes('水') || lowName.includes('泡')) internalId = 'hydropump';
+            else if (lowName.includes('leaf') || lowName.includes('草') || lowName.includes('花') || lowName.includes('葉') || lowName.includes('カッター')) internalId = 'solarbeam';
+            else if (lowName.includes('bolt') || lowName.includes('雷') || lowName.includes('電') || lowName.includes('光') || lowName.includes('100まん')) internalId = 'lightning';
+            else if (lowName.includes('beam') || lowName.includes('光線') || lowName.includes('ビーム') || lowName.includes('びーむ')) internalId = 'solarbeam';
+            else if (lowName.includes('heal') || lowName.includes('回復') || lowName.includes('治') || lowName.includes('さいせい')) internalId = 'heal';
+            else if (lowName.includes('punch') || lowName.includes('パンチ') || lowName.includes('kick') || lowName.includes('キック') || lowName.includes('ずつき') || lowName.includes('あたる')) internalId = 'tackle';
+        }
+        
         let count = 0;
         let dirX = side === 'left' ? 1 : -1; // 1 means moving from left to right
 
-        switch(skillId) {
+        switch(internalId) {
             case 'tackle':
-                count = 1;
+            case 'pound':
+            case 'scratch':
+            case 'slam':
+                count = 12; // Increased from 1 for visibility
                 for(let i=0; i<count; i++) {
-                    let life = Math.floor(Math.random() * 5) + 8;
-                    let size = Math.random() * 8 + 20; // larger base size
+                    let life = Math.floor(Math.random() * 8) + 12;
+                    let size = Math.random() * 15 + 25; // larger base size
                     let color = '#fff';
-                    let p = new Particle(x, y, 0, 0, life, color, size, null, 'slash');
-                    p.angle = (Math.random() - 0.5) * 0.3; // Mostly horizontal tilt
-                    p.spin = 0; // Freeze rotation
+                    // Spread it around the impact 
+                    let px = x + (Math.random() - 0.5) * 60;
+                    let py = y + (Math.random() - 0.5) * 60;
+                    let p = new Particle(px, py, (Math.random()-0.5)*5, (Math.random()-0.5)*5, life, color, size, null, 'slash');
+                    p.angle = (Math.random() * Math.PI * 2); 
+                    p.spin = (Math.random() - 0.5) * 0.2;
                     this.particles.push(p);
                 }
                 break;
@@ -338,31 +401,45 @@ class ParticleSystem {
                 }
                 break;
             case 'quickattack':
+            case 'thunderbolt':
                 // 1. Central starburst flash behind/on the target
                 let pFlash = new Particle(x, y, 0, 0, 15, '#ffde00', 30, null, 'starburst');
                 pFlash.spin = 0;
                 this.particles.push(pFlash);
 
                 // 2. Radiating zigzag thunderbolts
-                count = 6; 
+                count = (internalId === 'thunderbolt') ? 10 : 6; // More bolts for real Thunderbolt
                 for(let i=0; i<count; i++) {
-                    let life = Math.floor(Math.random() * 5) + 12; // flash duration slightly longer for overlap
-                    let size = (Math.random() * 4 + 8) * 1.5; 
+                    let life = Math.floor(Math.random() * 5) + 12; 
+                    let size = (Math.random() * 4 + 8) * (internalId === 'thunderbolt' ? 2 : 1.5); 
                     
-                    // Spawn thunderbolts starting from x, y
                     let p = new Particle(x, y, 0, 0, life, '#ffde00', size, null, 'thunderbolt');
-                    // Distribute around the circle
                     p.angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
-                    p.spin = 0; // lock rotation
+                    p.spin = 0;
                     this.particles.push(p);
                     
-                    // Also spark some high-speed straight lines outwards for extra energy
                     let sSpeed = Math.random() * 15 + 10;
                     let sDx = Math.cos(p.angle) * sSpeed;
                     let sDy = Math.sin(p.angle) * sSpeed;
                     let sLife = Math.floor(Math.random() * 10) + 10;
                     let sSize = Math.random() * 5 + 3;
                     this.particles.push(new Particle(x, y, sDx, sDy, sLife, '#ffffff', sSize, null, 'line'));
+                }
+                break;
+            case 'lightning':
+                // Single massive vertical bolt
+                let pBolt = new Particle(x, y - 50, 0, 0, 20, '#fff', 5, null, 'lightning');
+                pBolt.spin = 0;
+                this.particles.push(pBolt);
+                
+                // Ground flash
+                this.particles.push(new Particle(x, y, 0, 0, 10, '#fff', 40, null, 'starburst'));
+                
+                // Electric sparks around impact
+                for(let i=0; i<20; i++) {
+                    let angle = Math.random() * Math.PI * 2;
+                    let speed = Math.random() * 10 + 5;
+                    this.particles.push(new Particle(x, y, Math.cos(angle)*speed, Math.sin(angle)*speed, 15, '#ffde00', 2, null, 'circle'));
                 }
                 break;
             case 'hydropump':

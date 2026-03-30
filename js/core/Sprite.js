@@ -10,6 +10,8 @@ class Sprite {
         // Caches for DOM interactions to prevent layout thrashing
         this._lastW = '';
         this._lastH = '';
+        this._lastLeft = '';
+        this._lastTop = '';
         this._lastTransform = '';
         this._lastFilter = '';
         
@@ -90,89 +92,84 @@ class Sprite {
     }
 
     draw(ctx) {
+        // --- DOM POSITIONING (Must run even if canvas img is loading/missing) ---
+        if (this.domElement) {
+            let fw = 96, fh = 96;
+            const img = AssetGenerator.get(this.imageKey);
+            if (img) {
+                fw = img.width || 96;
+                fh = img.height || 96;
+            }
+
+            let dx = 0; let dy = 0; let rot = 0;
+            let drawScale = this.scale * 1.2;
+
+            if (this.imageKey && this.imageKey.startsWith('api_')) {
+                let timeMs = performance.now();
+                let period = 2000;
+                let progress = (timeMs % period) / period;
+                let curve = (1 - Math.cos(progress * 2 * Math.PI)) / 2;
+                
+                if (this.currentAnim === 'idle') dy = -25 * curve;
+                else if (this.currentAnim === 'attack') dx = (this.tickCount < 10) ? 15 : 0;
+                else if (this.currentAnim === 'hit') { dx = -10; }
+                else if (this.currentAnim === 'faint') { 
+                    rot = -Math.PI / 4;
+                    dy = (fh * drawScale) / 4;
+                }
+            }
+
+            let fWidth = fw * drawScale;
+            let fHeight = fh * drawScale;
+            
+            if (this._lastW !== fWidth + 'px') { this.domElement.style.width = fWidth + 'px'; this._lastW = fWidth + 'px'; }
+            if (this._lastH !== fHeight + 'px') { this.domElement.style.height = fHeight + 'px'; this._lastH = fHeight + 'px'; }
+            
+            // Offsets and Visuals via Transform (Translation for micro-movements dx/dy)
+            let scaleStr = this.flipX ? 'scaleX(-1)' : 'scaleX(1)';
+            let rotateStr = rot ? `rotate(${rot}rad)` : '';
+            let newTransform = `translate(${dx}px, ${dy}px) ${scaleStr} ${rotateStr}`;
+            
+            if (this._lastTransform !== newTransform) {
+                this.domElement.style.transform = newTransform;
+                this._lastTransform = newTransform;
+            }
+            
+            // Visual filters
+            let newFilter = '';
+            if (this.flashWhite) newFilter = 'brightness(2) contrast(0) opacity(1)';
+            else if (this.currentAnim === 'faint') newFilter = 'drop-shadow(0 0 5px rgba(0,0,0,0.5)) opacity(0.5)';
+            else newFilter = `drop-shadow(0 0 5px rgba(0,0,0,0.5)) opacity(${this.alpha})`;
+
+            if (this._lastFilter !== newFilter) {
+                this.domElement.style.filter = newFilter;
+                this._lastFilter = newFilter;
+            }
+
+            // If we are using DOM, we are done with this sprite's basic drawing
+            return; 
+        }
+
+        // --- CANVAS DRAWING (Standard fallback) ---
         const img = AssetGenerator.get(this.imageKey);
         if(!img) return;
 
         ctx.save();
         ctx.globalAlpha = this.alpha;
-        
         ctx.translate(this.x, this.y);
-        if(this.flipX) {
-            ctx.scale(-1, 1);
-        }
-
-        if(this.flashWhite) {
-            // Apply a simple composite operation to make it look white
-            ctx.globalCompositeOperation = 'lighter';
-        }
+        
+        if(this.flipX) ctx.scale(-1, 1);
+        if(this.flashWhite) ctx.globalCompositeOperation = 'lighter';
 
         if(this.imageKey.startsWith('api_')) {
-            let fw = img.width || 96; // 取得できない場合のみ96
+            let fw = img.width || 96;
             let fh = img.height || 96;
-            let dx = 0; let dy = 0; let rot = 0;
-            let timeMs = performance.now();
-            let period = 2000;
-            let progress = (timeMs % period) / period;
-            let curve = (1 - Math.cos(progress * 2 * Math.PI)) / 2;
-            if (this.currentAnim === 'idle') dy = -25 * curve;
-            else if (this.currentAnim === 'attack') dx = (this.tickCount < 10) ? 15 : 0;
-            else if (this.currentAnim === 'hit') { dx = -10; ctx.globalCompositeOperation = 'lighter'; }
-            else if (this.currentAnim === 'faint') { 
-                // 仰向けに倒れるように後ろへ回転し、地面(下方向)へ沈ませる
-                rot = -Math.PI / 4; // 左に45度回転
-                dy = (fh * (this.scale * 1.2)) / 4; // 若干沈み込むように
-                ctx.globalAlpha = 0.5; 
-            }
-            
-            ctx.rotate(rot);
-            let drawScale = this.scale * 1.2; // 試合中一律1.2倍拡大
-
-            if (this.domElement) {
-                let fWidth = fw * drawScale;
-                let fHeight = fh * drawScale;
-                
-                let newW = fWidth + 'px';
-                let newH = fHeight + 'px';
-                if (this._lastW !== newW) { this.domElement.style.width = newW; this._lastW = newW; }
-                if (this._lastH !== newH) { this.domElement.style.height = newH; this._lastH = newH; }
-                
-                // Position centered
-                let px = this.x - fWidth/2 + dx;
-                let py = this.y - fHeight/2 + dy;
-                
-                let scaleStr = this.flipX ? 'scaleX(-1)' : 'scaleX(1)';
-                let rotateStr = rot ? `rotate(${rot}rad)` : '';
-                
-                let newTransform = `translate(${px}px, ${py}px) ${scaleStr} ${rotateStr}`;
-                if (this._lastTransform !== newTransform) {
-                    this.domElement.style.transform = newTransform;
-                    this._lastTransform = newTransform;
-                }
-                
-                let newFilter = '';
-                if (this.flashWhite) {
-                    newFilter = 'brightness(2) contrast(0) opacity(1)';
-                } else if (this.currentAnim === 'faint') {
-                    newFilter = 'drop-shadow(0 0 5px rgba(0,0,0,0.5)) opacity(0.5)';
-                } else {
-                    newFilter = `drop-shadow(0 0 5px rgba(0,0,0,0.5)) opacity(${this.alpha})`;
-                }
-
-                if (this._lastFilter !== newFilter) {
-                    this.domElement.style.filter = newFilter;
-                    this._lastFilter = newFilter;
-                }
-                
-                ctx.restore();
-                return; // SKIP CANVAS DRAW
-            }
-
-            ctx.drawImage(img, -fw*drawScale/2 + dx, -fh*drawScale/2 + dy, fw*drawScale, fh*drawScale);
+            let drawScale = this.scale * 1.2;
+            ctx.drawImage(img, -fw*drawScale/2, -fh*drawScale/2, fw*drawScale, fh*drawScale);
         } else {
             let anim = this.animations[this.currentAnim];
             let sx = this.currentFrame * this.frameWidth;
             let sy = anim.row * this.frameHeight;
-            // Draw centered
             ctx.drawImage(
                 img, 
                 sx, sy, this.frameWidth, this.frameHeight,
@@ -180,7 +177,6 @@ class Sprite {
                 this.frameWidth * this.scale, this.frameHeight * this.scale
             );
         }
-
         ctx.restore();
     }
 }

@@ -163,7 +163,7 @@ canvas {
 
 .selection-container {
     display: flex;
-    gap: 40px;
+    gap: 25px;
     justify-content: center;
     align-items: center;
     flex-direction: row; /* Side-by-side design */
@@ -965,3 +965,458 @@ canvas {
     animation: evolved-pop 0.6s ease-out;
 }
 
+/* PokeSolo Styles */
+.solo-box, .result-box {
+    background: rgba(15, 15, 30, 0.95);
+    border: 3px solid #4cc9f0;
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 0 30px rgba(76, 201, 240, 0.3);
+}
+
+#pokesolo-input-name {
+    width: 100%;
+    padding: 15px;
+    font-size: 20px;
+    background: #1a1a2e;
+    border: 2px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.matching-loader {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(76, 201, 240, 0.2);
+    border-top-color: #4cc9f0;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.pokemon-card-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 30px;
+    padding: 20px;
+}
+
+.pokemon-card {
+    background: #1a1a2e;
+    border: 2px solid #333;
+    border-radius: 12px;
+    width: 180px;
+    padding: 20px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    text-align: center;
+}
+
+.pokemon-card:hover {
+    transform: translateY(-10px);
+    border-color: #4cc9f0;
+    box-shadow: 0 10px 20px rgba(76, 201, 240, 0.2);
+}
+
+.pokemon-card.selected {
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+.pokemon-card .p-img {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pokemon-card img {
+    width: 80px;
+    height: 80px;
+    image-rendering: pixelated;
+}
+.pokemon-card .p-name {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.pokemon-card .p-rarity {
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.selection-header {
+    text-align: center;
+    margin-top: 50px;
+}
+
+#selection-timer {
+    font-size: 40px;
+    font-weight: bold;
+    color: #e63946;
+}
+
+.selection-hint {
+    text-align: center;
+    color: #888;
+    margin-top: 20px;
+}
+
+/* Dynamic Responsive Scaling */
+#game-container {
+    transform-origin: center center;
+}
+
+/* Global Upgrade Button */
+.btn-global-upgrade {
+    background: #555;
+    color: #ccc;
+    border-color: #777;
+    margin-left: 20px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.btn-global-upgrade.active-upgrade {
+    background: #fca311;
+    color: #000;
+    border-color: #fff;
+    box-shadow: 0 0 15px rgba(252, 163, 17, 0.8);
+}
+
+.btn-global-upgrade .text-large {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.btn-global-upgrade .text-small {
+    font-size: 10px;
+}
+
+/* Evolution Animations */
+@keyframes evolving {
+    0% { filter: brightness(1) contrast(1); transform: scale(1); }
+    50% { filter: brightness(3) contrast(2); transform: scale(1.15); }
+    100% { filter: brightness(1) contrast(1); transform: scale(1); }
+}
+
+@keyframes evolved-pop {
+    0% { transform: scale(0.3); filter: brightness(3); opacity: 0; }
+    70% { transform: scale(1.2); filter: brightness(1.5); opacity: 1; }
+    100% { transform: scale(1); filter: brightness(1); opacity: 1; }
+}
+
+.evolving {
+    animation: evolving 0.4s infinite;
+    position: relative;
+}
+
+.evolved-pop {
+    animation: evolved-pop 0.6s ease-out;
+}
+
+/* PokeSolo Styles */
+.solo-box, .result-box {
+    background: rgba(15, 15, 30, 0.95);
+    border: 3px solid #4cc9f0;
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 0 30px rgba(76, 201, 240, 0.3);
+}
+
+#pokesolo-input-name {
+    width: 100%;
+    padding: 15px;
+    font-size: 20px;
+    background: #1a1a2e;
+    border: 2px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.matching-loader {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(76, 201, 240, 0.2);
+    border-top-color: #4cc9f0;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.pokemon-card-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 30px;
+    padding: 20px;
+}
+
+.pokemon-card {
+    background: #1a1a2e;
+    border: 2px solid #333;
+    border-radius: 12px;
+    width: 180px;
+    padding: 20px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    text-align: center;
+}
+
+.pokemon-card:hover {
+    transform: translateY(-10px);
+    border-color: #4cc9f0;
+    box-shadow: 0 10px 20px rgba(76, 201, 240, 0.2);
+}
+
+.pokemon-card.selected {
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+.pokemon-card .p-img {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pokemon-card img {
+    width: 80px;
+    height: 80px;
+    image-rendering: pixelated;
+}
+
+.pokemon-card .p-name {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.pokemon-card .p-rarity {
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.selection-header {
+    text-align: center;
+    margin-top: 50px;
+}
+
+#selection-timer {
+    font-size: 40px;
+    font-weight: bold;
+    color: #e63946;
+}
+
+.selection-hint {
+    text-align: center;
+    color: #888;
+    margin-top: 20px;
+}
+
+/* PokeSolo Result Centering & Animation */
+#pokesolo-result-screen {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: rgba(0,0,0,0.4); /* Dim the background slightly */
+}
+
+#pokesolo-result-winner-sprite {
+    width: 180px;
+    height: 180px;
+    margin: 20px auto;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #ffd700;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+    overflow: hidden;
+}
+
+#pokesolo-winner-img {
+    width: 140px;
+    height: 140px;
+    image-rendering: pixelated;
+    object-fit: contain;
+    display: block;
+}
+
+.result-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+/* Registration & Matching Screens */
+#pokesolo-name-screen, #pokesolo-matching-screen {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a1a 100%);
+}
+
+#pokesolo-name-ball-bg {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 80vh; height: 80vh;
+    transform: translate(-50%, -50%);
+    opacity: 0.15;
+    z-index: 1;
+    pointer-events: none;
+    filter: blur(2px);
+}
+
+/* PokeSolo Battle UI (Bottom panel) */
+#pokesolo-bottom-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 800px;
+    background: rgba(15, 15, 30, 0.9);
+    border: 3px solid #4cc9f0;
+    border-radius: 15px;
+    padding: 15px;
+    z-index: 100;
+}
+
+#pokesolo-battle-message-box {
+    margin-bottom: 15px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+#pokesolo-battle-message {
+    font-size: 14px; color: #fff; text-align: center;
+}
+
+#pokesolo-stamina-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+
+.stamina-label {
+    font-family: 'Press Start 2P'; font-size: 10px; color: #ffd700;
+}
+
+.stamina-bar-bg {
+    flex: 1; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden;
+}
+
+.stamina-bar-fill {
+    height: 100%; width: 0%; background: linear-gradient(90deg, #ffd700, #ff8c00); transition: width 0.3s ease;
+}
+
+#pokesolo-stamina-text {
+    font-family: 'Press Start 2P'; font-size: 8px; color: #fff; width: 65px; text-align: right;
+}
+
+#pokesolo-skill-container {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+}
+
+#pokesolo-skill-container .skill-btn {
+    padding: 8px 5px; 
+    font-size: 11px; 
+    min-height: 52px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    line-height: 1.2;
+}
+
+#pokesolo-skill-container .skill-btn .skill-name {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+#pokesolo-skill-container .skill-btn .skill-cost {
+    font-size: 9px;
+    opacity: 0.8;
+}
+
+/* Responsive Mobile */
+@media (max-width: 768px) {
+    #pokesolo-bottom-panel { bottom: 5px; width: 95%; padding: 8px; }
+    #pokesolo-battle-message-box { min-height: 38px; margin-bottom: 10px; }
+    #pokesolo-battle-message { font-size: 11px; }
+    #pokesolo-stamina-row { margin-bottom: 8px; }
+    #pokesolo-skill-container { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    #pokesolo-skill-container .skill-btn { min-height: 37px; font-size: 9px; padding: 5px; }
+    #pokesolo-result-winner-sprite { width: 140px; height: 140px; }
+    #pokesolo-winner-img { width: 110px; height: 110px; }
+
+    /* PokeSolo Selection 2x2 Grid */
+    .pokemon-card-container {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px !important;
+        padding: 10px !important;
+    }
+    .pokemon-card {
+        width: 100% !important;
+        padding: 15px 10px !important;
+    }
+    .pokemon-card .p-img {
+        width: 80px !important;
+        height: 80px !important;
+    }
+    .pokemon-card img {
+        width: 60px !important;
+        height: 60px !important;
+    }
+    .pokemon-card .p-name {
+        font-size: 14px !important;
+    }
+
+    /* PokeTrain Battle UI Slimming */
+    #train-bottom-panel { padding: 8px 12px 12px; }
+    #train-battle-message-box { min-height: 37px; }
+    #train-battle-message { font-size: 11px; }
+    #train-skill-container { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    #train-skill-container .skill-btn { padding: 8px 4px; font-size: 9px; }
+}
