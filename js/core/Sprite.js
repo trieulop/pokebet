@@ -57,6 +57,13 @@ class Sprite {
 
     reset() {
         this.play('idle');
+        this.evolutionStage = 1;
+        this.playerControlled = false;
+
+        // Visual offsets for animation alignment
+        this.visualOffsetX = 0;
+        this.visualOffsetY = 0;
+        this.visualRotation = 0;
         this.alpha = 1;
         this.flashWhite = false;
     }
@@ -64,6 +71,32 @@ class Sprite {
     update() {
         if(this.imageKey && this.imageKey.startsWith('api_')) {
              this.tickCount++;
+             
+             // Update visual offsets based on current animation
+             let timeMs = performance.now();
+             
+             if (this.currentAnim === 'idle') {
+                 let t = timeMs / 1000;
+                 this.visualOffsetY = -22 * ((1 - Math.cos(t * Math.PI)) / 2);
+                 this.visualOffsetX = 12 * Math.sin(t * 0.8 * Math.PI);
+                 this.visualRotation = 0.08 * Math.sin(t * 0.5 * Math.PI);
+             } else if (this.currentAnim === 'attack') {
+                 this.visualOffsetX = (this.tickCount < 10) ? 15 : 0;
+                 this.visualOffsetY = 0;
+                 this.visualRotation = 0;
+             } else if (this.currentAnim === 'hit') {
+                 this.visualOffsetX = -10;
+                 this.visualOffsetY = 0;
+                 this.visualRotation = 0;
+             } else if (this.currentAnim === 'faint') {
+                 this.visualRotation = -Math.PI / 4;
+                 // Note: dy is calculated in draw because it depends on scale/height
+             } else {
+                 this.visualOffsetX = 0;
+                 this.visualOffsetY = 0;
+                 this.visualRotation = 0;
+             }
+
              if(this.currentAnim === 'attack' && this.tickCount > 20) {
                  this.play('idle');
              } else if (this.currentAnim === 'hit' && this.tickCount > 10) {
@@ -101,28 +134,13 @@ class Sprite {
                 fh = img.height || 96;
             }
 
-            let dx = 0; let dy = 0; let rot = 0;
+            let dx = this.visualOffsetX; 
+            let dy = this.visualOffsetY; 
+            let rot = this.visualRotation;
             let drawScale = this.scale * 1.2;
 
-            if (this.imageKey && this.imageKey.startsWith('api_')) {
-                let timeMs = performance.now();
-                let period = 2000;
-                let progress = (timeMs % period) / period;
-                let curve = (1 - Math.cos(progress * 2 * Math.PI)) / 2;
-                
-                if (this.currentAnim === 'idle') {
-                    // Combine multiple sine/cosine waves for a natural, "dancing/waving" effect
-                    let t = timeMs / 1000; // time in seconds
-                    dy = -22 * ((1 - Math.cos(t * Math.PI)) / 2); // Smooth floating (2s period)
-                    dx = 12 * Math.sin(t * 0.8 * Math.PI);        // Horizontal sway (2.5s period)
-                    rot = 0.08 * Math.sin(t * 0.5 * Math.PI);      // Subtle tilt (4s period)
-                }
-                else if (this.currentAnim === 'attack') dx = (this.tickCount < 10) ? 15 : 0;
-                else if (this.currentAnim === 'hit') { dx = -10; }
-                else if (this.currentAnim === 'faint') { 
-                    rot = -Math.PI / 4;
-                    dy = (fh * drawScale) / 4;
-                }
+            if (this.currentAnim === 'faint') {
+                dy = (fh * drawScale) / 4;
             }
 
             let fWidth = fw * drawScale;

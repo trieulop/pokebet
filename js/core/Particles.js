@@ -184,12 +184,10 @@ class Particle {
                 ctx.strokeStyle = '#fff';
                 ctx.stroke();
             } else if (this.type === 'megabeam') {
-                // this.dx decides direction. If dx > 0 (came from left), beam source is on the left (-length).
-                let dir = this.dx > 0 ? 1 : -1; 
-                // The particle is spawned precisely at attacker's X.
-                // startX is 0 (origin), endX shoots past the screen (+1500px).
+                // Draws forward from origin (0,0) towards the target's visual center.
+                // Rotation is already applied by Particle.draw() based on this.angle.
                 let startX = 0; 
-                let endX = 1500 * dir; 
+                let endX = 1500; 
                 
                 let size = this.size;
                 
@@ -199,7 +197,7 @@ class Particle {
                 ctx.lineTo(endX, -size * 2.5);
                 ctx.lineTo(endX, size * 2.5);
                 ctx.lineTo(startX, size * 1.5);
-                ctx.fillStyle = '#d4d700'; // yellowish
+                ctx.fillStyle = '#d4d700';
                 ctx.fill();
 
                 // Green/Yellow mid glow
@@ -208,7 +206,7 @@ class Particle {
                 ctx.lineTo(endX, -size * 1.5);
                 ctx.lineTo(endX, size * 1.5);
                 ctx.lineTo(startX, size * 1.0);
-                ctx.fillStyle = '#a8e639'; // yellowish green
+                ctx.fillStyle = '#a8e639';
                 ctx.fill();
                 
                 // White core
@@ -220,9 +218,8 @@ class Particle {
                 ctx.fillStyle = '#ffffff'; 
                 ctx.fill();
             } else if (this.type === 'waterbeam') {
-                let dir = this.dx > 0 ? 1 : -1; 
                 let startX = 0; 
-                let endX = 1500 * dir; 
+                let endX = 1500; 
                 let size = this.size;
                 
                 // Deep blue outer glow
@@ -444,16 +441,17 @@ class ParticleSystem {
                 break;
             case 'hydropump':
                 let hBeamY = sourceY - 40;
-                let hStartOff = dirX * 30; // offset slightly in front of the mouth
-                let pBeam = new Particle(sourceX + hStartOff, hBeamY, dirX, 0, 25, '#4cc9f0', 25, null, 'waterbeam');
-                pBeam.angle = 0; 
+                let hStartOffX = dirX * 30; // offset slightly in front
+                let hAngle = Math.atan2(y - 40 - hBeamY, x - (sourceX + hStartOffX));
+                let pBeam = new Particle(sourceX + hStartOffX, hBeamY, dirX, 0, 25, '#4cc9f0', 25, null, 'waterbeam');
+                pBeam.angle = hAngle; 
                 pBeam.spin = 0;
                 this.particles.push(pBeam);
 
                 // Add expanding rapid water rings around the origin
                 for(let i=0; i<6; i++) {
                     let rLife = 10 + i * 3;
-                    let rX = sourceX + hStartOff + dirX * (Math.random() * 50);
+                    let rX = sourceX + hStartOffX + dirX * (Math.random() * 50);
                     let r = new Particle(rX, hBeamY, dirX * 15, 0, rLife, '#e0fbfc', Math.random()*40 + 60, null, 'ring');
                     r.angle = 0; 
                     r.spin = 0;
@@ -465,13 +463,13 @@ class ParticleSystem {
                 for(let i=0; i<count; i++) {
                     let speed = Math.random() * 25 + 15;
                     // Flying generally super fast forward
-                    let angle = (dirX > 0 ? 0 : Math.PI) + (Math.random() - 0.5) * 0.3;
+                    let angle = hAngle + (Math.random() - 0.5) * 0.3;
                     let dx = Math.cos(angle) * speed;
                     let dy = Math.sin(angle) * speed;
                     let life = Math.floor(Math.random() * 15) + 10;
                     let size = Math.random() * 4 + 2;
                     let color = Math.random() > 0.4 ? '#4cc9f0' : '#ffffff';
-                    let pd = new Particle(sourceX + hStartOff + (Math.random() * 80 * dirX), hBeamY + (Math.random()-0.5)*40, dx, dy, life, color, size, null, 'line');
+                    let pd = new Particle(sourceX + hStartOffX + (Math.random() * 80 * dirX), hBeamY + (Math.random()-0.5)*40, dx, dy, life, color, size, null, 'line');
                     pd.angle = angle; 
                     pd.spin = 0;
                     this.particles.push(pd);
@@ -480,13 +478,14 @@ class ParticleSystem {
             case 'solarbeam':
                 count = 1;
                 let beamY = sourceY - 40; // aim roughly at the center of attacker
-                let startOffset = dirX * 30; // slightly in front of attacker mouth
+                let startOffset = dirX * 30; // slightly in front of attacker
+                let targetAng = Math.atan2(y - 40 - beamY, x - (sourceX + startOffset));
                 for(let i=0; i<count; i++) {
-                    let life = 30; // lasts a longer duration
-                    let size = 35; // very thick beam!
-                    // Spawn particle EXACTLY at attacker's position
+                    let life = 30; 
+                    let size = 35; 
+                    // Spawn particle EXACTLY at attacker's visual position
                     let p = new Particle(sourceX + startOffset, beamY, dirX, 0, life, '#fff', size, null, 'megabeam');
-                    p.angle = 0;
+                    p.angle = targetAng;
                     p.spin = 0;
                     this.particles.push(p);
                 }

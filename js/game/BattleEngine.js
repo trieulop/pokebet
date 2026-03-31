@@ -547,7 +547,7 @@ class BattleEngine {
             if (defender.isProtecting) {
                 finalDmgMult *= 0.5;
                 this.onMessage(`${defender.name} は攻撃を防いだ！`);
-                this.particleSystem.addFloatingText(defenderSprite.x, defenderSprite.y - 120, `GUARD!`, '#4cc9f0', 28);
+                this.particleSystem.addFloatingText(defenderSprite.x + defenderSprite.visualOffsetX, defenderSprite.y + defenderSprite.visualOffsetY - 120, `GUARD!`, '#4cc9f0', 28);
                 defender.isProtecting = false; // Consume protection
             }
             
@@ -558,8 +558,12 @@ class BattleEngine {
             this.shakeCamera(10, 10);
             defenderSprite.play('hit');
             defenderSprite.flashWhite = true;
-            this.particleSystem.addSkillEffect(skill.id, defenderSprite.x, defenderSprite.y, attackerSide, attackerSprite.x, attackerSprite.y);
-            this.particleSystem.addFloatingText(defenderSprite.x, defenderSprite.y - 100, `-${actualDmg}`, '#e63946', 32);
+            try {
+                this.particleSystem.addSkillEffect(skill.id, defenderSprite.x + defenderSprite.visualOffsetX, defenderSprite.y + defenderSprite.visualOffsetY, attackerSide, attackerSprite.x + attackerSprite.visualOffsetX, attackerSprite.y + attackerSprite.visualOffsetY, skill.name);
+            } catch (e) {
+                console.error("[BattleEngine] Skill effect error:", e);
+            }
+            this.particleSystem.addFloatingText(defenderSprite.x + defenderSprite.visualOffsetX, defenderSprite.y + defenderSprite.visualOffsetY - 100, `-${actualDmg}`, '#e63946', 32);
 
             await this.wait(200);
             defenderSprite.flashWhite = false;
@@ -667,7 +671,7 @@ class BattleEngine {
             const isTrain = trainUI && trainUI.classList.contains('active') && !trainUI.classList.contains('hidden');
             const isBet = betUI && betUI.classList.contains('active') && !betUI.classList.contains('hidden');
             
-            if (isSolo || this.battleMode === 'manual') {
+            if (isSolo) {
                 bgKey = "bg_soccer";
             } else if (isTrain) {
                 bgKey = "bg_train";
