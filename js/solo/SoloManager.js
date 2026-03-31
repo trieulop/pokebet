@@ -359,7 +359,7 @@ class SoloManager {
         this.socket.emit("select_pokemon", { playerId: this.socket.id, pokemonName: pokemon.name, roomId: this.roomId, pokemonData });
     }
 
-    startBattle(player, opponent) {
+    async startBattle(player, opponent) {
         UIUtils.showScreen('pokesolo-battle-ui');
         document.getElementById('battle-sprite-layer').style.display = 'block';
 
@@ -372,13 +372,29 @@ class SoloManager {
         this.myFighter = new Pokemon(player.id, player.name, player.hp, player.atk, player.def, player.spd, player.spriteKey, player.types);
         this.myFighter.maxHp = player.maxHp || player.hp;
         this.myFighter.hp = player.hp;
-        this.myFighter.uiSpriteUrl = player.uiSpriteUrl;
+        
+        // --- ALWAYS FETCH LATEST GIF FOR POKEAPI SPRITES ---
+        if (player.spriteKey && player.spriteKey.startsWith('api_')) {
+            console.log("[SoloManager] API Poke detected, fetching GIF...");
+            const fd = await GameData.fetchFighterData(player.id);
+            this.myFighter.uiSpriteUrl = fd.uiSpriteUrl;
+        } else {
+            this.myFighter.uiSpriteUrl = player.uiSpriteUrl || "";
+        }
         this.myFighter.skills = player.skills;
 
         this.oppFighter = new Pokemon(opponent.id, opponent.name, opponent.hp, opponent.atk, opponent.def, opponent.spd, opponent.spriteKey, opponent.types);
         this.oppFighter.maxHp = opponent.maxHp || opponent.hp;
         this.oppFighter.hp = opponent.hp;
-        this.oppFighter.uiSpriteUrl = opponent.uiSpriteUrl;
+
+        // --- ALWAYS FETCH LATEST GIF FOR POKEAPI SPRITES ---
+        if (opponent.spriteKey && opponent.spriteKey.startsWith('api_')) {
+            console.log("[SoloManager] API Poke detected, fetching GIF...");
+            const fd = await GameData.fetchFighterData(opponent.id);
+            this.oppFighter.uiSpriteUrl = fd.uiSpriteUrl;
+        } else {
+            this.oppFighter.uiSpriteUrl = opponent.uiSpriteUrl || "";
+        }
         this.oppFighter.skills = opponent.skills;
 
         this.opponentInfo = { id: opponent.id, name: opponent.name };
@@ -407,11 +423,22 @@ class SoloManager {
 
     updateBattleUI(fightersMap) {
         const myId = this.socket.id;
-        this.myFighter = fightersMap[myId];
+        const myData = fightersMap[myId];
         const oppId = Object.keys(fightersMap).find(id => id !== myId);
-        this.oppFighter = fightersMap[oppId];
+        const oppData = fightersMap[oppId];
+        
+        if (myData && this.myFighter) {
+            this.myFighter.hp = myData.hp;
+            this.myFighter.maxHp = myData.maxHp;
+            this.myFighter.stamina = myData.stamina;
+            this.stamina = myData.stamina;
+        }
 
-        this.stamina = this.myFighter.stamina;
+        if (oppData && this.oppFighter) {
+            this.oppFighter.hp = oppData.hp;
+            this.oppFighter.maxHp = oppData.maxHp;
+            this.oppFighter.stamina = oppData.stamina;
+        }
 
         // Update HP Bars
         const hpL = document.getElementById('pokesolo-hp-fill-left');

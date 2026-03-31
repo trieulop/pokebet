@@ -110,7 +110,13 @@ class Sprite {
                 let progress = (timeMs % period) / period;
                 let curve = (1 - Math.cos(progress * 2 * Math.PI)) / 2;
                 
-                if (this.currentAnim === 'idle') dy = -25 * curve;
+                if (this.currentAnim === 'idle') {
+                    // Combine multiple sine/cosine waves for a natural, "dancing/waving" effect
+                    let t = timeMs / 1000; // time in seconds
+                    dy = -22 * ((1 - Math.cos(t * Math.PI)) / 2); // Smooth floating (2s period)
+                    dx = 12 * Math.sin(t * 0.8 * Math.PI);        // Horizontal sway (2.5s period)
+                    rot = 0.08 * Math.sin(t * 0.5 * Math.PI);      // Subtle tilt (4s period)
+                }
                 else if (this.currentAnim === 'attack') dx = (this.tickCount < 10) ? 15 : 0;
                 else if (this.currentAnim === 'hit') { dx = -10; }
                 else if (this.currentAnim === 'faint') { 

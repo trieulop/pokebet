@@ -104,8 +104,12 @@ const GameData = {
             let atk = data.stats.find(s => s.stat.name === 'attack').base_stat;
             let def = data.stats.find(s => s.stat.name === 'defense').base_stat;
             let spd = data.stats.find(s => s.stat.name === 'speed').base_stat;
-            let spriteUrl = data.sprites.front_default || data.sprites.back_default;
-            let animatedUrl = data.sprites.other?.showdown?.front_default || data.sprites.versions?.["generation-v"]?.["black-white"]?.animated?.front_default;
+            let spriteUrl = data.sprites.front_default || data.sprites.back_default || "";
+            // Priority for animated GIFs: Showdown (Gen 1-8) -> Gen 5 Animated (Gen 1-5)
+            let animatedUrl = 
+                (data.sprites.other && data.sprites.other.showdown && data.sprites.other.showdown.front_default) || 
+                (data.sprites.versions && data.sprites.versions["generation-v"] && data.sprites.versions["generation-v"]["black-white"] && 
+                 data.sprites.versions["generation-v"]["black-white"].animated && data.sprites.versions["generation-v"]["black-white"].animated.front_default);
             let types = data.types.map(t => t.type.name);
             
             let spriteKey = `api_${data.id}`;
