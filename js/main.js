@@ -17,20 +17,21 @@ window.addEventListener('load', async () => {
     const topBar = document.getElementById('top-bar');
 
     btnPokeBet.addEventListener('click', async () => {
+        battleEngine.pickRandomBackground();
         UIUtils.showScreen('betting-screen');
         topBar.classList.remove('hidden');
-        battleEngine.forceBackground = null; // Ensure no leftover backgrounds
         await uiManager.generateMatchup();
     });
 
     btnPokeTrain.addEventListener('click', () => {
+        battleEngine.pickRandomBackground();
         UIUtils.showScreen(null); // Just hide all first
         battleEngine.battleMode = 'auto'; 
-        battleEngine.forceBackground = null; // CLEAR SOCCER BACKGROUND
         trainController.boot();
     });
 
     btnPokeSolo.addEventListener('click', () => {
+        battleEngine.pickRandomBackground();
         battleEngine.battleMode = 'manual'; 
         soloManager.boot();
     });
@@ -71,10 +72,8 @@ window.addEventListener('load', async () => {
         if(dt < 15) return;
         lastTime = timestamp;
 
-        // Render battle only if active to save resources
-        if (battleEngine.isRunning) {
-            battleEngine.render();
-        }
+        // Render battle (always render for background visibility)
+        battleEngine.render();
     }
 
     requestAnimationFrame(gameLoop);

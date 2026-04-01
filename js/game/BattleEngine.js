@@ -76,6 +76,14 @@ class BattleEngine {
         return this._forceBackground;
     }
 
+    pickRandomBackground() {
+        if (typeof AssetGenerator !== 'undefined' && AssetGenerator.BACKGROUND_KEYS) {
+            const keys = AssetGenerator.BACKGROUND_KEYS;
+            const bgIdx = Math.floor(Math.random() * keys.length);
+            this.forceBackground = keys[bgIdx];
+        }
+    }
+
     resize() {
         if (!this.canvas) return;
         // Maximum redundancy: clientWidth > window > manual attribute
@@ -156,6 +164,7 @@ class BattleEngine {
     // Remote battle initialization (PokeSolo)
     startRemoteBattle(leftFighter, rightFighter, callbacks) {
         console.log("[BattleEngine] Starting Remote Battle Session...");
+        
         this.leftFighter = leftFighter;
         this.rightFighter = rightFighter;
         this.battleMode = 'remote'; // Explicitly set remote mode
@@ -662,24 +671,9 @@ class BattleEngine {
         // --- ASPECT RATIO AWARE BACKGROUND (Center-Cover) ---
         let bgKey = this._forceBackground;
         
+        // If no background is forced, we default to black (or we could default to arena)
         if (!bgKey) {
-            const soloUI = document.getElementById('pokesolo-battle-ui');
-            const trainUI = document.getElementById('train-battle-ui');
-            const betUI = document.getElementById('battle-ui');
-
-            const isSolo = soloUI && soloUI.classList.contains('active') && !soloUI.classList.contains('hidden');
-            const isTrain = trainUI && trainUI.classList.contains('active') && !trainUI.classList.contains('hidden');
-            const isBet = betUI && betUI.classList.contains('active') && !betUI.classList.contains('hidden');
-            
-            if (isSolo) {
-                bgKey = "bg_soccer";
-            } else if (isTrain) {
-                bgKey = "bg_train";
-            } else if (isBet) {
-                bgKey = "bg_arena";
-            } else {
-                bgKey = (this.canvasHeight > this.canvasWidth ? "bg_train" : "bg_arena");
-            }
+            bgKey = "bg_arena";
         }
         
         let bgImg = AssetGenerator.get(bgKey);

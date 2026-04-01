@@ -36,9 +36,6 @@ class SoloManager {
         const myId = this.socket.id;
         this.battleEngine.startBattle(player, opponent, myId);
         
-        // Set background AFTER startBattle to ensure it's not reset by internal calls
-        this.battleEngine.forceBackground = 'bg_soccer';
-        
         this.showScreen('pokesolo-battle-ui');
     }
 

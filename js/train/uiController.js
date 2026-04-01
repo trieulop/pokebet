@@ -73,6 +73,7 @@ class TrainUIController {
             this.boot();
         });
         this.els.btnBack.addEventListener('click', () => {
+            this.engine.forceBackground = null;
             UIUtils.showScreen('game-selection-screen');
         });
     }
@@ -169,7 +170,6 @@ class TrainUIController {
         this.setupSkillButtons();
         
         this.engine.battleMode = 'manual';
-        this.engine.forceBackground = 'bg_train';
         
         this.engine.startBattle(this.playerFighter, this.enemyFighter, {
             onMessage: (msg) => { this.els.battleMsg.innerText = msg; },

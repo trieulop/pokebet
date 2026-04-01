@@ -3,6 +3,7 @@
 
 class AssetGenerator {
     static sprites = {};
+    static BACKGROUND_KEYS = ['bg1', 'bg2', 'bg3', 'bg4', 'bg5', 'bg6', 'bg7', 'bg8', 'bg9'];
 
     static init() {
         // Generate sprite sheets for different dummy pokemon and items
@@ -10,9 +11,16 @@ class AssetGenerator {
         this.sprites['slime_red'] = this.createCreatureSprite('#e63946');
         this.sprites['slime_green'] = this.createCreatureSprite('#06d6a0');
         this.sprites['slime_gold'] = this.createCreatureSprite('#ffd700');
-        this.sprites['bg_arena'] = this.loadExternalImage('assets/bg_bet.png');
-        this.sprites['bg_train'] = this.loadExternalImage('assets/bg_train.png');
-        this.sprites['bg_soccer'] = this.loadExternalImage('assets/bg_soccer.png');
+        
+        // Load all background images from assets
+        this.BACKGROUND_KEYS.forEach(key => {
+            this.sprites[key] = this.loadExternalImage(`assets/${key}.png`);
+        });
+
+        // Maintain backward compatibility
+        this.sprites['bg_arena'] = this.sprites['bg2']; 
+        this.sprites['bg_soccer'] = this.sprites['bg6'];
+        this.sprites['bg_train'] = this.sprites['bg8'];
     }
 
     static loadExternalImage(path) {

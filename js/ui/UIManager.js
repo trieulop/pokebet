@@ -81,6 +81,7 @@ class UIManager {
         });
 
         this.els.btnBack.addEventListener('click', () => {
+            this.battleEngine.forceBackground = null;
             UIUtils.showScreen('game-selection-screen');
             document.getElementById('top-bar').classList.add('hidden');
         });
